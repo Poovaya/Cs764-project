@@ -1,20 +1,20 @@
+#include "DataRecord.h"
+#include "Filter.h"
 #include "Iterator.h"
 #include "Scan.h"
-#include "Filter.h"
 #include "Sort.h"
 
-int main (int argc, char * argv [])
-{
-	TRACE (true);
+int main(int argc, char* argv[]) {
+    TRACE(false);
 
-	Plan * const plan = new ScanPlan (7);
-	// new SortPlan ( new FilterPlan ( new ScanPlan (7) ) );
+    Plan* const plan = new ScanPlan(7, 4);
+    // new SortPlan ( new FilterPlan ( new ScanPlan (7) ) );
 
-	Iterator * const it = plan->init ();
-	it->run ();
-	delete it;
+    Iterator* const it = plan->init();
+    it->run();
+    delete it;
 
-	delete plan;
+    delete plan;
 
-	return 0;
-} // main
+    return 0;
+}  // main

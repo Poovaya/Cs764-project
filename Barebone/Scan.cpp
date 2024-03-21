@@ -41,11 +41,10 @@ DataRecord ScanPlan::GetRecord(RowCount const rowid) const {
     return this->_rows[rowid];
 }  // ScanPlan::GetRecord
 
-DataRecordList* ScanPlan::GetAllRecords() const {
-    DataRecordList* recList = new DataRecordList;
+std::vector<DataRecord> ScanPlan::GetAllRecords() const {
+    std::vector<DataRecord> recList;
     for (RowCount i = 0; i < _count; i++) {
-        recList->records.push_back(this->_rows[i]);
+        recList.push_back(this->_rows[i]);
     }
-    recList->num_records = _count;
     return recList;
 }

@@ -9,7 +9,7 @@ class ScanPlan : public Plan {
     ~ScanPlan();
     Iterator *init() const;
     DataRecord GetRecord(RowCount const rowid) const;
-    DataRecordList *GetAllRecords() const;
+    std::vector<DataRecord> GetAllRecords() const;
 
    private:
     RowCount const _count;

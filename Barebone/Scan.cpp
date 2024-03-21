@@ -31,6 +31,8 @@ bool ScanIterator::next() {
 
     if (_count >= _plan->_count) return false;
     this->_plan->GetRecord(_count).show();
+    std::string rec = this->_plan->GetRecord(_count).getRecord();
+    std::cout << "GET RECORD " << rec << std::endl;
     ++_count;
     return true;
 }  // ScanIterator::next

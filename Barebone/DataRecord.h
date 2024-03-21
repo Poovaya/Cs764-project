@@ -21,6 +21,7 @@ class DataRecord {
     void setColumn(int index, const char* value);
     void initRandomRecord(int column_width);
     void show();
+    std::string getRecord();
 };
 
 typedef struct DataRecordList {

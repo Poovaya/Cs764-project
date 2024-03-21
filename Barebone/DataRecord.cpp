@@ -6,7 +6,7 @@
 
 DataRecord::DataRecord() {
     // Initialize data array to empty strings
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < 4; ++i) {
         memset(data[i], 0, sizeof(data[i]));
     }
 }
@@ -41,6 +41,17 @@ void DataRecord::show() {
         std::cout << data[i] << " ";
     }
     std::cout << '\n';
+}
+
+std::string DataRecord::getRecord() {
+    std::string recordString = "";
+    for (int i = 0; i < 4; i++) {
+        recordString += this->getColumn(i);
+        if (i != 3) {
+            recordString += " ";
+        }
+    }
+    return recordString;
 }
 
 std::string DataRecord::random_string(size_t length) {

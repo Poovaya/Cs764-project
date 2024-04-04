@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "Scan.h"
 
 ScanPlan::ScanPlan(RowCount const count, int column_width) : _count(count) {

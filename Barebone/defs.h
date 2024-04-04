@@ -1,6 +1,5 @@
 #pragma once
 
-#include <bits/stdc++.h>
 #include <dirent.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -11,7 +10,7 @@ typedef uint8_t byte;
 
 #define slotsof(a) (sizeof(a) / sizeof(a[0]))
 
-#define nullptr ((void *)NULL)
+// #define nullptr ((void *)NULL)
 
 #define yesno(b) ((b) ? "yes" : "no")
 

@@ -1,28 +1,29 @@
 #include "DataRecord.h"
 
 #include <random>
+#include <iostream>
+#include <string>
 
 #include "defs.h"
 
 DataRecord::DataRecord() {
     // Initialize data array to empty strings
-    for (int i = 0; i < 4; ++i) {
-        memset(data[i], 0, sizeof(data[i]));
-    }
+    // for (int i = 0; i < 4; ++i) {
+    //     memset(data[i], 0, sizeof(data[i]));
+    // }
 }
 
-DataRecord::DataRecord(const char* col1, const char* col2, const char* col3,
-                       const char* col4) {
+DataRecord::DataRecord(std::string col1, std::string  col2, std::string  col3, std::string  col4) {
     // Set the values of key and columns
-    strncpy(data[0], col1, sizeof(data[0]) - 1);  // Copy col1 to second column
-    strncpy(data[1], col2, sizeof(data[1]) - 1);  // Copy col2 to third column
-    strncpy(data[2], col3, sizeof(data[2]) - 1);  // Copy col3 to fourth column
-    strncpy(data[3], col4, sizeof(data[3]) - 1);  // Copy col3 to fourth column
+    data.push_back(col1);
+    data.push_back(col2);
+    data.push_back(col3);
+    data.push_back(col4);
 }
 
-const char* DataRecord::getKey() const { return data[0]; }
+std::string DataRecord::getKey() const { return data[0]; }
 
-const char* DataRecord::getColumn(int index) const {
+std::string DataRecord::getColumn(int index) const {
     if (index >= 0 && index < 4) {
         return data[index];
     } else {
@@ -30,9 +31,9 @@ const char* DataRecord::getColumn(int index) const {
     }
 }
 
-void DataRecord::setColumn(int index, const char* value) {
-    if (index >= 0 && index < 4 && value != nullptr) {
-        strncpy(data[index], value, sizeof(data[index]) - 1);
+void DataRecord::setColumn(int index, std::string value) {
+    if (index >= 0 && index < 4) {
+        data[index] = value;
     }
 }
 

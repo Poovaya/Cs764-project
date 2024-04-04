@@ -1,32 +1,26 @@
 #pragma once
 
-#include <bits/stdc++.h>
-
 #include <cstring>
+#include <string>
+#include <vector>
 
 class DataRecord {
    private:
     std::string random_string(size_t length);
 
    public:
-    char data[4][256];  // 2D array to store 3 columns
+    std::vector<std::string> data;  // 2D array to store 3 columns
     int index;
     int column_width;
     DataRecord();
-    DataRecord(const char* col1, const char* col2, const char* col3,
-               const char* col4);
+    DataRecord(std::string col1, std::string col2, std::string col3, std::string col4);
 
-    const char* getKey() const;
-    const char* getColumn(int index) const;
-    void setColumn(int index, const char* value);
+    std::string getKey() const;
+    std::string getColumn(int index) const;
+    void setColumn(int index, std::string value);
     void initRandomRecord(int column_width);
     void show();
     std::string getRecord();
-};
-
-typedef struct DataRecordList {
-    std::list<DataRecord> records;
-    long int num_records;
 };
 
 // DATARECORD_H

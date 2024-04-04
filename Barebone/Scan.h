@@ -1,6 +1,6 @@
-#include "defs.h"
 #include "DataRecord.h"
 #include "Iterator.h"
+#include "defs.h"
 
 class ScanPlan : public Plan {
     friend class ScanIterator;
@@ -10,11 +10,11 @@ class ScanPlan : public Plan {
     ~ScanPlan();
     Iterator *init() const;
     DataRecord GetRecord(RowCount const rowid) const;
-    std::vector<DataRecord> GetAllRecords() const;
+    std::vector<DataRecord> GetAllRecords();
 
    private:
     RowCount const _count;
-    DataRecord *_rows;
+    std::vector<DataRecord> _rows;
 
 };  // class ScanPlan
 

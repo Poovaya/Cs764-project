@@ -1,19 +1,20 @@
 #include "DataRecord.h"
 
-#include <random>
+#include <bits/stdc++.h>
+
 #include <iostream>
+#include <random>
 #include <string>
 
 #include "defs.h"
 
 DataRecord::DataRecord() {
     // Initialize data array to empty strings
-    // for (int i = 0; i < 4; ++i) {
-    //     memset(data[i], 0, sizeof(data[i]));
-    // }
+    data = std::vector<std::string>(4, "");
 }
 
-DataRecord::DataRecord(std::string col1, std::string  col2, std::string  col3, std::string  col4) {
+DataRecord::DataRecord(std::string col1, std::string col2, std::string col3,
+                       std::string col4) {
     // Set the values of key and columns
     data.push_back(col1);
     data.push_back(col2);
@@ -31,7 +32,7 @@ std::string DataRecord::getColumn(int index) const {
     }
 }
 
-void DataRecord::setColumn(int index, std::string value) {
+void DataRecord::setColumn(int index, std::string& value) {
     if (index >= 0 && index < 4) {
         data[index] = value;
     }
@@ -72,6 +73,45 @@ std::string DataRecord::random_string(size_t length) {
 void DataRecord::initRandomRecord(int column_width) {
     for (int i = 0; i < 4; i++) {
         std::string rand_string = random_string(4);
-        setColumn(i, rand_string.c_str());
+        setColumn(i, rand_string);
+    }
+}
+
+bool DataRecord::compareDataRecords(DataRecord& a, DataRecord& b) {
+    for (int i = 0; i < 4; i++) {
+        if (a.data[i] == b.data[i])
+            continue;
+        else if (a.data[i] < b.data[i])
+            return true;
+        else
+            return false;
+        // for (int j = 0; j < a.column_width; j++) {
+        //     if (a.data[i][j] == b.data[i][j])
+        //         continue;
+        //     else if (a.data[i][j] < b.data[i][j])
+        //         return true;
+        //     else
+        //         return false;
+        // }
+    }
+}
+
+struct DataRecordComparator {
+    bool operator()(DataRecord& first, DataRecord& second) const {
+        // Return true if first should go before second
+        // return first.data[0][0] < second.data[0][0];  // return true;
+        return DataRecord::compareDataRecords(first, second);
+    }
+};
+
+DataRecord::DataRecord(const DataRecord& other) {
+    if (this != &other) {  // Check for self-assignment
+        // Copy each member from 'other' to 'this'
+        this->index = other.index;
+        this->column_width = other.column_width;
+        this->data = std::vector<std::string>(4, "");
+        for (int i = 0; i < 4; ++i) {
+            this->data[i] = other.data[i];
+        }
     }
 }

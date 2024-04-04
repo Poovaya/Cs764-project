@@ -1,11 +1,16 @@
-#include <iostream>
-
 #include "Scan.h"
 
+#include <bits/stdc++.h>
+
+#include <iostream>
+
+#include "defs.h"
+
 ScanPlan::ScanPlan(RowCount const count, int column_width) : _count(count) {
-    this->_rows = new DataRecord[count];
+    this->_rows = std::vector<DataRecord>(count);
     for (RowCount i = 0; i < count; i++) {
         this->_rows[i].initRandomRecord(column_width);
+        this->_rows[i].column_width = column_width;
     }
     TRACE(true);
 }  // ScanPlan::ScanPlan
@@ -43,10 +48,10 @@ DataRecord ScanPlan::GetRecord(RowCount const rowid) const {
     return this->_rows[rowid];
 }  // ScanPlan::GetRecord
 
-std::vector<DataRecord> ScanPlan::GetAllRecords() const {
-    std::vector<DataRecord> recList;
+std::vector<DataRecord> ScanPlan::GetAllRecords() {
+    std::vector<DataRecord> recList(_count);
     for (RowCount i = 0; i < _count; i++) {
-        recList.push_back(this->_rows[i]);
+        recList[i] = this->_rows[i];
     }
     return recList;
 }

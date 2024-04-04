@@ -13,14 +13,17 @@ class DataRecord {
     int index;
     int column_width;
     DataRecord();
-    DataRecord(std::string col1, std::string col2, std::string col3, std::string col4);
+    DataRecord(std::string col1, std::string col2, std::string col3,
+               std::string col4);
 
     std::string getKey() const;
     std::string getColumn(int index) const;
-    void setColumn(int index, std::string value);
+    void setColumn(int index, std::string &value);
     void initRandomRecord(int column_width);
     void show();
     std::string getRecord();
-};
 
-// DATARECORD_H
+    DataRecord(const DataRecord &);
+
+    static bool compareDataRecords(DataRecord &, DataRecord &);
+};

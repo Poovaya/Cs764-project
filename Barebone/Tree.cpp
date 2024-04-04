@@ -1,6 +1,7 @@
 #include "Tree.h"
 
-#include <bits/stdc++.h>
+#include <iostream>
+#include <vector>
 using namespace std;
 DataRecord *Tree::popRecordFromLeafList(Node *node) {
     int numRecsInNode = node->sortedRun.size();

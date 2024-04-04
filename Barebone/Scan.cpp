@@ -1,6 +1,6 @@
 #include "Scan.h"
 
-#include <bits/stdc++.h>
+#include <vector>
 
 #include <iostream>
 

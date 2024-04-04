@@ -1,10 +1,10 @@
 #include "DataRecord.h"
 
-#include <bits/stdc++.h>
-
+#include <algorithm>
 #include <iostream>
 #include <random>
 #include <string>
+#include <vector>
 
 #include "defs.h"
 

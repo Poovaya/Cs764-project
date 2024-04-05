@@ -85,15 +85,8 @@ bool DataRecord::compareDataRecords(DataRecord& a, DataRecord& b) {
             return true;
         else
             return false;
-        // for (int j = 0; j < a.column_width; j++) {
-        //     if (a.data[i][j] == b.data[i][j])
-        //         continue;
-        //     else if (a.data[i][j] < b.data[i][j])
-        //         return true;
-        //     else
-        //         return false;
-        // }
     }
+    return false;
 }
 
 struct DataRecordComparator {

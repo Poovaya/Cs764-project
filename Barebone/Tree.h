@@ -6,8 +6,8 @@ class Tree {
     /* data */
    public:
     Tree();
-    Tree(vector<vector<DataRecord *>> &, int);
-    Tree(vector<DataRecord> &);
+    Tree(vector<vector<DataRecord *>> &, int, bool);
+    Tree(vector<DataRecord> &, bool);
     ~Tree();
     void generateSortedRun();
     void run_tournament(int);
@@ -18,6 +18,7 @@ class Tree {
     int numNodes;
     int numInnerNodes;
     int numRecords;
+    bool removeDuplicate;
     vector<DataRecord *> generated_run;
     DataRecord *popRecordFromLeafList(Node *);
     DataRecord *getTopRecordFromLeafList(Node *);

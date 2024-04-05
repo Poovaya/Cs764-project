@@ -31,7 +31,9 @@ DataRecord *Tree::getTopRecordFromLeafList(Node *node) {
     return dataRecord;
 }
 
-Tree::Tree(vector<vector<DataRecord *>> &recordList, int numRecords) {
+Tree::Tree(vector<vector<DataRecord *>> &recordList, int numRecords,
+           bool shouldRemoveDuplicates) {
+    this->removeDuplicate = shouldRemoveDuplicates;
     this->numRuns = recordList.size();
     this->numLeaves = this->numRuns;
     this->numRecords = numRecords;
@@ -59,7 +61,9 @@ Tree::Tree(vector<vector<DataRecord *>> &recordList, int numRecords) {
     }
 }
 
-Tree::Tree(vector<DataRecord> &records) {
+Tree::Tree(vector<DataRecord> &records, bool shouldRemoveDuplicates) {
+    this->removeDuplicate = shouldRemoveDuplicates;
+
     this->numRuns = records.size();
     this->numRecords = this->numRuns;
 
@@ -96,8 +100,18 @@ void Tree::generateSortedRun() {
              inner_node_index--) {
             this->run_tournament(inner_node_index);
         }
-
-        this->generated_run.push_back(this->heap[0].dataRecord);
+        if (this->removeDuplicate == true) {
+            int n = this->generated_run.size();
+            if (n == 0) {
+                this->generated_run.push_back(this->heap[0].dataRecord);
+            } else if (this->heap[0].dataRecord != NULL &&
+                       !(*this->generated_run[n - 1] ==
+                         *this->heap[0].dataRecord)) {
+                this->generated_run.push_back(this->heap[0].dataRecord);
+            }
+        } else {
+            this->generated_run.push_back(this->heap[0].dataRecord);
+        }
         this->heap[0].dataRecord = NULL;
     }
 }

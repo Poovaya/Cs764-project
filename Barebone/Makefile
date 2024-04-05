@@ -13,11 +13,14 @@ SCRS=
 HDRS=	defs.h \
 		Iterator.h Scan.h Filter.h Sort.h DataRecord.h StorageDevice.h Tree.h
 SRCS=	defs.cpp Assert.cpp Test.cpp \
-		Iterator.cpp Scan.cpp Filter.cpp Sort.cpp DataRecord.cpp StorageDevice.cpp Tree.cpp
+		Iterator.cpp Scan.cpp Filter.cpp Sort.cpp DataRecord.cpp StorageDevice.cpp Tree.cpp ExternalMergeSort.cpp
 
 # compilation targets
 OBJS=	defs.o Assert.o Test.o \
-		Iterator.o Scan.o Filter.o Sort.o DataRecord.o StorageDevice.o Tree.o
+		Iterator.o Scan.o Filter.o Sort.o DataRecord.o StorageDevice.o Tree.o 
+
+EXTERNAL_MERGE_SORT_OBJS=	defs.o Assert.o  \
+		Iterator.o Scan.o Filter.o Sort.o DataRecord.o StorageDevice.o Tree.o ExternalMergeSort.o
 
 # RCS assists
 REV=-q -f
@@ -27,6 +30,9 @@ MSG=no message
 #
 Test.exe : Makefile $(OBJS)
 	g++ $(CPPFLAGS) -o Test.exe $(OBJS)
+
+ExternalMergeSort.exe : Makefile $(EXTERNAL_MERGE_SORT_OBJS)
+	g++ $(CPPFLAGS) -o ExternalMergeSort.exe $(EXTERNAL_MERGE_SORT_OBJS)
 
 trace : Test.exe Makefile
 	@date > trace
@@ -54,3 +60,4 @@ co :
 
 clean :
 	@rm -f $(OBJS) Test.exe Test.exe.stackdump trace
+	@rm -f $(EXTERNAL_MERGE_SORT_OBJS) ExternalMergeSort.exe

@@ -6,9 +6,10 @@ class Tree {
     /* data */
    public:
     Tree();
-    Tree(vector<vector<DataRecord>> &);
+    Tree(vector<vector<DataRecord *>> &, int);
+    Tree(vector<DataRecord> &);
     ~Tree();
-    void run_tree();
+    void generateSortedRun();
     void run_tournament(int);
     int numRuns;
     struct Node *heap;
@@ -16,13 +17,14 @@ class Tree {
     int numLeaves;
     int numNodes;
     int numInnerNodes;
+    int numRecords;
     vector<DataRecord *> generated_run;
     DataRecord *popRecordFromLeafList(Node *);
     DataRecord *getTopRecordFromLeafList(Node *);
     void checkforEmptyNode(Node *);
     //  vector<DataRecord *> getGeneratedRun();
 
-    void printSortedRun(vector<DataRecord>);
+    void printSortedRun(vector<DataRecord *>);
 };
 
 struct Node {
@@ -31,7 +33,7 @@ struct Node {
     int dataIndex;
 
     // For leaf nodes
-    vector<DataRecord> sortedRun;
+    vector<DataRecord *> sortedRun;
     int sortedRunIndex;
     bool isLeaf;
     bool isEmpty;

@@ -20,22 +20,23 @@ struct DataRecordComparator {
 int main(int argc, char* argv[]) {
     // TRACE(false);
 
-    vector<vector<DataRecord>> dr;
+    vector<vector<DataRecord*>> dr;
+    int numRecords = 28;
     for (int i = 0; i < 4; i++) {
         ScanPlan* const plan = new ScanPlan(7, 4);
         Iterator* const it = plan->init();
 
         vector<DataRecord> recList = plan->GetAllRecords();
-        sort(recList.begin(), recList.end(), DataRecordComparator());
-        dr.push_back(recList);
+        Tree miniTree = Tree(recList);
+        miniTree.generateSortedRun();
+        vector<DataRecord*> sortedRecList = miniTree.generated_run;
+        dr.push_back(sortedRecList);
     }
-    Tree tr = Tree(dr);
+    Tree tr = Tree(dr, numRecords);
 
     tr.printHeap();
 
-    for (int i = 0; i < 7 * 4; i++) {
-        tr.run_tree();
-    }
+    tr.generateSortedRun();
 
     vector<DataRecord*> records;
 

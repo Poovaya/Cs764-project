@@ -9,7 +9,7 @@ DataRecord *Tree::popRecordFromLeafList(Node *node) {
         return NULL;
     }
     DataRecord *dataRecord =
-        new DataRecord(node->sortedRun[node->sortedRunIndex]);
+        new DataRecord(*node->sortedRun[node->sortedRunIndex]);
     node->sortedRunIndex++;
     return dataRecord;
 }
@@ -27,13 +27,14 @@ DataRecord *Tree::getTopRecordFromLeafList(Node *node) {
         return NULL;
     }
     DataRecord *dataRecord =
-        new DataRecord(node->sortedRun[node->sortedRunIndex]);
+        new DataRecord(*node->sortedRun[node->sortedRunIndex]);
     return dataRecord;
 }
 
-Tree::Tree(vector<vector<DataRecord>> &recordList) {
+Tree::Tree(vector<vector<DataRecord *>> &recordList, int numRecords) {
     this->numRuns = recordList.size();
     this->numLeaves = this->numRuns;
+    this->numRecords = numRecords;
     this->numInnerNodes = (this->numLeaves % 2 + this->numLeaves / 2) * 2 - 1;
     cout << this->numInnerNodes << " INNER NODES" << endl;
 
@@ -58,14 +59,47 @@ Tree::Tree(vector<vector<DataRecord>> &recordList) {
     }
 }
 
-void Tree::run_tree() {
-    for (int inner_node_index = this->numInnerNodes; inner_node_index >= 0;
-         inner_node_index--) {
-        this->run_tournament(inner_node_index);
+Tree::Tree(vector<DataRecord> &records) {
+    this->numRuns = records.size();
+    this->numRecords = this->numRuns;
+
+    this->numLeaves = this->numRuns;
+    this->numInnerNodes = (this->numLeaves % 2 + this->numLeaves / 2) * 2 - 1;
+    //  cout << this->numInnerNodes << " INNER NODES" << endl;
+
+    this->numNodes = numLeaves + this->numInnerNodes;
+    this->heap = new struct Node[this->numNodes];
+
+    for (int i = 0; i < this->numNodes; i++) {
+        heap[i].dataRecord = NULL;
+        heap[i].isEmpty = true;
+        heap[i].isLeaf = false;
+        heap[i].sortedRun = {};
+        heap[i].sortedRunIndex = 0;
+        heap[i].dataIndex = 0;
     }
 
-    this->generated_run.push_back(this->heap[0].dataRecord);
-    this->heap[0].dataRecord = NULL;
+    for (int i = numInnerNodes; i < numNodes; i++) {
+        vector<DataRecord *> singleSortedRecord(1);
+        singleSortedRecord[0] = &records[i - numInnerNodes];
+        heap[i].sortedRun = singleSortedRecord;
+        heap[i].isLeaf = true;
+        heap[i].isEmpty = false;
+        heap[i].dataIndex = i;
+        heap[i].sortedRunIndex = 0;
+    }
+}
+
+void Tree::generateSortedRun() {
+    for (int i = 0; i < this->numRecords; i++) {
+        for (int inner_node_index = this->numInnerNodes; inner_node_index >= 0;
+             inner_node_index--) {
+            this->run_tournament(inner_node_index);
+        }
+
+        this->generated_run.push_back(this->heap[0].dataRecord);
+        this->heap[0].dataRecord = NULL;
+    }
 }
 
 // vector<DataRecord *> Tree::getGeneratedRun() { return this->generated_run; }
@@ -92,9 +126,8 @@ void Tree::run_tournament(int parent) {
                     popRecordFromLeafList(left_child_node);
             }
         }
-    }
-    { /* Both the children are valid. So add the popped record at parent (if
-         empty) */
+    } else { /* Both the children are valid. So add the popped record at parent
+           (if empty) */
         if (parent_node->dataRecord) {
             return;
         } else {
@@ -106,6 +139,7 @@ void Tree::run_tournament(int parent) {
                 left_data = getTopRecordFromLeafList(left_child_node);
                 right_data = getTopRecordFromLeafList(right_child_node);
                 if ((right_data != NULL) & (left_data != NULL)) {
+                    // Left is the winner
                     if (DataRecord::compareDataRecords(*left_data,
                                                        *right_data)) {
                         parent_node->dataRecord =
@@ -181,9 +215,9 @@ void Tree::run_tournament(int parent) {
     }
 }
 
-void Tree::printSortedRun(vector<DataRecord> dr) {
-    for (DataRecord d : dr) {
-        d.show();
+void Tree::printSortedRun(vector<DataRecord *> dr) {
+    for (DataRecord *d : dr) {
+        d->show();
     }
 }
 void Tree::printHeap() {

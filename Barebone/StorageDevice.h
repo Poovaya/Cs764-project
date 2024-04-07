@@ -14,7 +14,9 @@ class StorageDevice {
     int last_run;
     map<int, int> run_offset;
     std::string device_path;
-    void spillRecordsToDisk(bool ifNewFile, int runNumber, vector<DataRecord*> &records);
-    vector<vector<DataRecord> >  getRecordsFromRunsOnDisk(int numRecords);
+    StorageDevice(string device_path);
+    void spillRecordsToDisk(bool ifNewFile, int runNumber, vector<DataRecord *> &records);
+    void spillRecordListToDisk(vector<vector<DataRecord*> > record_lists);
+    vector<vector<DataRecord*> >  getRecordsFromRunsOnDisk(int numRecords);
 };
 

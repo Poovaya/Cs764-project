@@ -7,15 +7,11 @@ StorageDevice::StorageDevice(string device_path)
 	this->run_offset = map<int,int>();
 }
 
-void StorageDevice:: spillRecordsToDisk(bool ifNewFile, int runNumber, vector<DataRecord*> &records) {
+void StorageDevice:: spillRecordsToDisk(bool ifNewFile, vector<DataRecord*> &records) {
     string runPath = this->device_path;
     if (ifNewFile) {
-        runPath += "/sorted_run" + to_string(runNumber);
-        if (runNumber == 0) {
-            this->last_run = 1;
-        } else {
-            this->last_run++;
-        }
+        runPath += "/sorted/sorted_run_" + to_string(this->getTotalRuns() + 1);
+        
     } else {
         runPath += "/merged_runs";
     }
@@ -41,17 +37,17 @@ void StorageDevice:: spillRecordsToDisk(bool ifNewFile, int runNumber, vector<Da
 void StorageDevice::spillRecordListToDisk(vector<vector<DataRecord*> > record_lists)
 {
 	for (uint ii = 0 ; ii < record_lists.size() ; ii++) {		
-		this->spillRecordsToDisk(true, 0, record_lists[ii]);
+		this->spillRecordsToDisk(true, record_lists[ii]);
 	}
 }
 
 vector<vector<DataRecord*> >  StorageDevice::  getRecordsFromRunsOnDisk(int numRecords) {
 	vector<vector<DataRecord*> > recordLists;
 
-	for (uint ii = 1 ; ii <= this->last_run ; ii++) {
+	for (uint ii = 1 ; ii <= this->getTotalRuns() ; ii++) {
 		vector<DataRecord*> records;
         fstream runfile;	
-        string runPath = this->device_path + "/sorted_run" + to_string(ii);
+        string runPath = this->device_path + "/sorted/sorted_run_" + to_string(ii);
         uint recordSize = 4*4 + 3 + 1;
         char *runs = new char[numRecords * recordSize + 1];
 
@@ -94,3 +90,13 @@ vector<vector<DataRecord*> >  StorageDevice::  getRecordsFromRunsOnDisk(int numR
 } 
 
 
+int StorageDevice::getTotalRuns()
+{
+	uint n;
+	struct dirent **namelist;
+	uint count = 0;
+
+	n = scandir((this->device_path + "/sorted").c_str(), &namelist, 0, alphasort);
+
+	return n;
+}

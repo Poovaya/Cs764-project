@@ -1,3 +1,5 @@
+#include <unistd.h>
+
 #include "StorageDevice.h"
 
 StorageDevice::StorageDevice(string device_path)
@@ -5,6 +7,7 @@ StorageDevice::StorageDevice(string device_path)
 	this->device_path = device_path;
 	this->last_run = 0;
 	this->run_offset = map<int,int>();
+    this->ssdSize = 10 * 1024 * 1024 * 1024;
 }
 
 void StorageDevice:: spillRecordsToDisk(bool ifNewFile, vector<DataRecord*> &records) {
@@ -31,6 +34,8 @@ void StorageDevice:: spillRecordsToDisk(bool ifNewFile, vector<DataRecord*> &rec
     runfile << str_records;
 
     runfile.close();
+
+    this->ssdSize -= records.size() * (4*4 + 3 + 1);
     return;
 }
 
@@ -99,4 +104,17 @@ int StorageDevice::getTotalRuns()
 	n = scandir((this->device_path + "/sorted").c_str(), &namelist, 0, alphasort);
 
 	return n;
+}
+
+void StorageDevice::commitRun()
+{
+	int latestRun = this->getTotalRuns();
+	string mergedRunPath = this->device_path + "/merged_runs";
+	string newRunPath = this->device_path + "/sorted/sorted_run_" + to_string(last_run + 1);
+
+	if (access(mergedRunPath.c_str(), F_OK) == 0) {
+		rename(mergedRunPath.c_str(), newRunPath.c_str());
+	}
+
+	return;
 }

@@ -5,65 +5,65 @@
 #include <string>
 
 #include "DataRecord.h"
-#include "Tree.h"
-#include "StorageDevice.h"
 #include "Scan.h"
+#include "StorageDevice.h"
+#include "Tree.h"
 
 using namespace std;
 
-void ssdRuns(StorageDevice &ssd, StorageDevice &hdd)
-{
+void ssdRuns(StorageDevice &ssd, StorageDevice &hdd) {
     uint ssd_bandwidth = 100 * 1024 * 1024;
-    uint ssd_latency = 1 / (10 * 1000);
-	uint ssd_page_num_records = (ssd_bandwidth * ssd_latency) / (3 + 2 + 4*4);
+    double ssd_latency = 0.0001;
+    int ssd_page_num_records =
+        524;  //(ssd_bandwidth * ssd_latency) / (3 + 1 + 4 * 4);
 
-	while (ssd.getTotalRuns()) {
-		int num_records;
-		vector<DataRecord*> records;
-		vector<vector<DataRecord*> > record_lists;
+    while (ssd.getTotalRuns()) {
+        int num_records;
+        vector<DataRecord *> records;
+        vector<vector<DataRecord *>> record_lists;
 
-		record_lists = ssd.getRecordsFromRunsOnDisk(ssd_page_num_records);
-		if (record_lists.size() > 1) {
-			Tree tree = Tree(record_lists, num_records, false);
+        record_lists = ssd.getRecordsFromRunsOnDisk(ssd_page_num_records);
+        if (record_lists.size() > 1) {
+            Tree tree = Tree(record_lists, num_records, false);
 
-			tree.generateSortedRun();
+            tree.generateSortedRun();
 
-			records = tree.generated_run;
-		}
-		hdd.spillRecordsToDisk(false, records);
-	}
+            records = tree.generated_run;
+        }
+        hdd.spillRecordsToDisk(false, records);
+    }
 
-	return;
+    return;
 }
 
-void hddRuns(StorageDevice &ssd, StorageDevice &hdd)
-{
+void hddRuns(StorageDevice &ssd, StorageDevice &hdd) {
     uint hdd_bandwidth = 100 * 1024 * 1024;
-    uint hdd_latency = 1 * 10 / 1000 ;
-	uint hdd_page_num_records = (hdd_bandwidth * hdd_latency) / (3 + 2 + 4*4);
+    double hdd_latency = 5 * 1e-3;
+    uint hdd_page_num_records =
+        26214;  // (hdd_bandwidth * hdd_latency) / (3 + 1 + 4 * 4);
 
-	while (hdd.getTotalRuns())
-	{
-		vector<vector<DataRecord*> > record_lists;
+    while (hdd.getTotalRuns()) {
+        vector<vector<DataRecord *>> record_lists;
 
-		record_lists = hdd.getRecordsFromRunsOnDisk(hdd_page_num_records);
+        record_lists = hdd.getRecordsFromRunsOnDisk(hdd_page_num_records);
 
-		ssd.spillRecordListToDisk(record_lists);
-		ssdRuns(ssd, hdd);
-	}
+        ssd.spillRecordListToDisk(record_lists);
+        ssdRuns(ssd, hdd);
+    }
 
-	return;
+    return;
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     int opt;
     int numRecords = 0;  // Initialize to default values
-    int recordSize = 0;
+    int recordSize = 16;
     string trace_file = "trace";
 
     // Process command-line arguments using getopt
     while ((opt = getopt(argc, argv, "c:s:o:")) !=
-           -1) {  // Added ':' for option 'o' to indicate it expects an argument
+           -1) {  // Added ':' for option 'o' to indicate it expects an
+                  // argument
         switch (opt) {
             case 'c':
                 numRecords = atoi(optarg);
@@ -112,33 +112,27 @@ int main(int argc, char* argv[]) {
                 recordsToGenerate = numRecordsPerRun;
             }
 
-            ScanPlan* const plan = new ScanPlan(recordsToGenerate, colWidth);
-            Iterator* const it = plan->init();
+            ScanPlan *const plan = new ScanPlan(recordsToGenerate, colWidth);
             recordsToSpill += recordsToGenerate;
 
             vector<DataRecord> recList = plan->GetAllRecords();
             Tree miniTree = Tree(recList, true /* duplicates*/);
             miniTree.generateSortedRun();
 
-            vector<DataRecord*> sortedRecList = miniTree.generated_run;
+            vector<DataRecord *> sortedRecList = miniTree.generated_run;
             runs.push_back(sortedRecList);
         }
 
-        if (recordsToSpill * ON_DISK_RECORD_SIZE <= ssd.ssdSize)
-		{
-			ssd.spillRecordListToDisk(runs);
-		}
-		else
-		{
-			hdd.spillRecordListToDisk(runs);
-		}
+        if (recordsToSpill * ON_DISK_RECORD_SIZE <= ssd.ssdSize) {
+            ssd.spillRecordListToDisk(runs);
+        } else {
+            hdd.spillRecordListToDisk(runs);
+        }
     }
 
     ssdRuns(ssd, hdd);
-	hdd.commitRun();
-	hddRuns(ssd, hdd);
+    hdd.commitRun();
+    hddRuns(ssd, hdd);
 
     return 0;
 }
-
-

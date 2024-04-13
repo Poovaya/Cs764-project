@@ -1,7 +1,7 @@
 CPPOPT=-g -Og -D_DEBUG
 # -O2 -Os -Ofast
 # -fprofile-generate -fprofile-use
-CPPFLAGS=$(CPPOPT) -Wall -ansi -pedantic -std=c++11
+CPPFLAGS=$(CPPOPT) -Wall -ansi -pedantic -std=c++17
 # -Wparentheses -Wno-unused-parameter -Wformat-security
 # -fno-rtti -std=c++11 -std=c++98
 
@@ -19,8 +19,8 @@ SRCS=	defs.cpp Assert.cpp Test.cpp \
 OBJS=	defs.o Assert.o Test.o \
 		Iterator.o Scan.o Filter.o Sort.o DataRecord.o StorageDevice.o Tree.o 
 
-EXTERNAL_MERGE_SORT_OBJS=	defs.o Assert.o  \
-		Iterator.o Scan.o Filter.o Sort.o DataRecord.o StorageDevice.o Tree.o ExternalMergeSort.o
+EXTERNAL_MERGE_SORT_OBJS=	defs.o Assert.o  ExternalMergeSort.o\
+		Iterator.o Scan.o Filter.o Sort.o DataRecord.o StorageDevice.o Tree.o 
 
 # RCS assists
 REV=-q -f

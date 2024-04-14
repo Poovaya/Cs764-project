@@ -18,17 +18,22 @@ void ssdRuns(StorageDevice &ssd, StorageDevice &hdd) {
         524;  //(ssd_bandwidth * ssd_latency) / (3 + 1 + 4 * 4);
 
     while (ssd.getTotalRuns()) {
-        int num_records;
+        int num_records = 0;
         vector<DataRecord *> records;
         vector<vector<DataRecord *>> record_lists;
-
         record_lists = ssd.getRecordsFromRunsOnDisk(ssd_page_num_records);
+        for (auto x : record_lists) {
+            num_records += x.size();
+        }
+        if (num_records == 0) return;
         if (record_lists.size() > 1) {
             Tree tree = Tree(record_lists, num_records, false);
 
             tree.generateSortedRun();
 
             records = tree.generated_run;
+        } else if (record_lists.size() == 1) {
+            records = record_lists[0];
         }
         hdd.spillRecordsToDisk(false, records);
     }

@@ -25,7 +25,7 @@ void StorageDevice::spillRecordsToDisk(bool ifNewFile,
     fstream runfile;
     string str_records = "";
 
-    runfile.open(runPath, fstream::out);
+    runfile.open(runPath, fstream::out | fstream::app);
     if (!runfile.is_open()) return;
 
     for (uint ii = 0; ii < records.size(); ii++) {
@@ -86,9 +86,9 @@ vector<vector<DataRecord *> > StorageDevice::getRecordsFromRunsOnDisk(
             string col_value3 = record_str.substr(4 * 2 + 2, 4);
             string col_value4 = record_str.substr(4 * 3 + 3, 4);
 
-            DataRecord record =
-                DataRecord(col_value1, col_value2, col_value3, col_value4);
-            records.push_back(&record);
+            DataRecord *record =
+                new DataRecord(col_value1, col_value2, col_value3, col_value4);
+            records.push_back(record);
             start += recordSize;
         }
 
@@ -102,11 +102,6 @@ int StorageDevice::getTotalRuns() {
     uint n;
     struct dirent **namelist;
     uint count = 0;
-
-    // n = scandir(("/home/poovaya/project764/Cs764-project/Barebone/" +
-    //              this->device_path + "/sorted")
-    //                 .c_str(),
-    //             &namelist, 0, alphasort);
 
     const std::string directory_path =
         "/home/poovaya/project764/Cs764-project/Barebone/" + this->device_path +
@@ -126,9 +121,11 @@ int StorageDevice::getTotalRuns() {
 
 void StorageDevice::commitRun() {
     int latestRun = this->getTotalRuns();
-    string mergedRunPath = this->device_path + "/merged_runs";
-    string newRunPath =
-        this->device_path + "/sorted/sorted_run_" + to_string(last_run + 1);
+    string mergedRunPath = "/home/poovaya/project764/Cs764-project/Barebone" +
+                           this->device_path + "/merged_runs";
+    string newRunPath = "/home/poovaya/project764/Cs764-project/Barebone" +
+                        this->device_path + "/sorted/sorted_run_" +
+                        to_string(last_run + 1);
 
     if (access(mergedRunPath.c_str(), F_OK) == 0) {
         rename(mergedRunPath.c_str(), newRunPath.c_str());

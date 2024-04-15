@@ -12,7 +12,7 @@ DataRecord *Tree::popRecordFromLeafList(Node *node) {
     if (node->sortedRunIndex >= numRecsInNode) {
         vector<DataRecord *> records;
         fstream runfile;
-        string runPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
+        string runPath = "/home/kjain38/Cs764-project/Barebone/" +
                          this->runDevice.device_path + "/sorted/sorted_run_" +
                          to_string(node->dataIndex + 1);
         uint recordSize = 4 * 4 + 3 + 1;
@@ -73,7 +73,7 @@ DataRecord *Tree::getTopRecordFromLeafList(Node *node) {
     if (node->sortedRunIndex >= numRecsInNode) {
         vector<DataRecord *> records;
         fstream runfile;
-        string runPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
+        string runPath = "/home/kjain38/Cs764-project/Barebone/" +
                          this->runDevice.device_path + "/sorted/sorted_run_" +
                          to_string(node->dataIndex + 1);
         uint recordSize = 4 * 4 + 3 + 1;
@@ -89,12 +89,21 @@ DataRecord *Tree::getTopRecordFromLeafList(Node *node) {
         //     return NULL;
         // }
 
+        // Get the file size
+        runfile.seekg(0, std::ios::end);
+        std::streampos file_size = runfile.tellg();
+        runfile.seekg(0, std::ios::beg);
+
         runfile.seekg(this->runDevice.run_offset[node->dataIndex + 1],
                       fstream::beg);
 
         runfile.get(runs, numRecords * recordSize + 1);
         runfile.close();
         this->runDevice.run_offset[node->dataIndex + 1] += strlen(runs);
+
+        if (this->runDevice.run_offset[node->dataIndex + 1] >= file_size) {
+            remove(runPath.c_str());
+        }
 
         string s(runs);
 

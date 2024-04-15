@@ -8,7 +8,7 @@ def check_sorted(filename):
                     return False
     return True
 
-filename = '/home/poovaya/project764/Cs764-project/Barebone/HDD/merged_runs'  # Replace 'your_file.txt' with the actual filename
+filename = '/home/kjain38/Cs764-project/Barebone/HDD/merged_runs'  # Replace 'your_file.txt' with the actual filename
 if check_sorted(filename):
     print("All elements are alphanumerically sorted.")
 else:

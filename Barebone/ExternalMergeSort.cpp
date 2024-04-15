@@ -37,7 +37,7 @@ void ssdRuns(StorageDevice &ssd, StorageDevice &hdd) {
     }
     if (num_records == 0) return;
     if (record_lists.size() > 1) {
-        Tree tree = Tree(record_lists, 2000, true, ssd);
+        Tree tree = Tree(record_lists, 50000, true, ssd);
 
         tree.generateSortedRun();
 
@@ -57,6 +57,9 @@ void hddRuns(StorageDevice &ssd, StorageDevice &hdd) {
     uint hdd_page_num_records =
         26214;  // (hdd_bandwidth * hdd_latency) / (3 + 1 + 4 * 4);
 
+    if (hdd.getTotalRuns() == 1) {
+        return;
+    }
     while (hdd.getTotalRuns()) {
         vector<vector<DataRecord *>> record_lists;
 

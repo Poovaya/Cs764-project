@@ -2,11 +2,57 @@
 
 #include <iostream>
 #include <vector>
+
+#include "StorageDevice.h"
+
 using namespace std;
 DataRecord *Tree::popRecordFromLeafList(Node *node) {
     int numRecsInNode = node->sortedRun.size();
+    // cout << node->sortedRunIndex << endl;
     if (node->sortedRunIndex >= numRecsInNode) {
-        return NULL;
+        vector<DataRecord *> records;
+        fstream runfile;
+        string runPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
+                         this->runDevice.device_path + "/sorted/sorted_run_" +
+                         to_string(node->dataIndex + 1);
+        uint recordSize = 4 * 4 + 3 + 1;
+        int numRecords = 524;
+        char *runs = new char[numRecords * recordSize + 1];
+
+        runfile.open(runPath, fstream::in);
+        if (!runfile.is_open()) return NULL;
+
+        streampos fileSize = runfile.tellg();
+
+        if (this->runDevice.run_offset[node->dataIndex + 1] >= fileSize)
+            return NULL;
+
+        runfile.seekg(this->runDevice.run_offset[node->dataIndex + 1],
+                      fstream::beg);
+
+        runfile.get(runs, numRecords * recordSize + 1);
+        runfile.close();
+        this->runDevice.run_offset[node->dataIndex + 1] += strlen(runs);
+
+        string s(runs);
+
+        int start = 0;
+        while (start < strlen(runs)) {
+            string record_str;
+
+            record_str = s.substr(start, recordSize);
+            string col_value1 = record_str.substr(0, 4);
+            string col_value2 = record_str.substr(5, 4);
+            string col_value3 = record_str.substr(4 * 2 + 2, 4);
+            string col_value4 = record_str.substr(4 * 3 + 3, 4);
+
+            DataRecord *record =
+                new DataRecord(col_value1, col_value2, col_value3, col_value4);
+            records.push_back(record);
+            start += recordSize;
+        }
+        node->sortedRunIndex = 0;
+        node->sortedRun = records;
     }
     DataRecord *dataRecord =
         new DataRecord(*node->sortedRun[node->sortedRunIndex]);
@@ -23,8 +69,52 @@ void Tree::checkforEmptyNode(Node *node) {
 
 DataRecord *Tree::getTopRecordFromLeafList(Node *node) {
     int numRecsInNode = node->sortedRun.size();
+    //  cout << node->sortedRunIndex << endl;
     if (node->sortedRunIndex >= numRecsInNode) {
-        return NULL;
+        vector<DataRecord *> records;
+        fstream runfile;
+        string runPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
+                         this->runDevice.device_path + "/sorted/sorted_run_" +
+                         to_string(node->dataIndex + 1);
+        uint recordSize = 4 * 4 + 3 + 1;
+        int numRecords = 524;
+        char *runs = new char[numRecords * recordSize + 1];
+
+        runfile.open(runPath, fstream::in);
+        if (!runfile.is_open()) return NULL;
+
+        streampos fileSize = runfile.tellg();
+
+        // if (this->runDevice.run_offset[node->dataIndex + 1] >= fileSize) {
+        //     return NULL;
+        // }
+
+        runfile.seekg(this->runDevice.run_offset[node->dataIndex + 1],
+                      fstream::beg);
+
+        runfile.get(runs, numRecords * recordSize + 1);
+        runfile.close();
+        this->runDevice.run_offset[node->dataIndex + 1] += strlen(runs);
+
+        string s(runs);
+
+        int start = 0;
+        while (start < strlen(runs)) {
+            string record_str;
+
+            record_str = s.substr(start, recordSize);
+            string col_value1 = record_str.substr(0, 4);
+            string col_value2 = record_str.substr(5, 4);
+            string col_value3 = record_str.substr(4 * 2 + 2, 4);
+            string col_value4 = record_str.substr(4 * 3 + 3, 4);
+
+            DataRecord *record =
+                new DataRecord(col_value1, col_value2, col_value3, col_value4);
+            records.push_back(record);
+            start += recordSize;
+        }
+        node->sortedRunIndex = 0;
+        node->sortedRun = records;
     }
     DataRecord *dataRecord =
         new DataRecord(*node->sortedRun[node->sortedRunIndex]);
@@ -32,12 +122,13 @@ DataRecord *Tree::getTopRecordFromLeafList(Node *node) {
 }
 
 Tree::Tree(vector<vector<DataRecord *>> &recordList, int numRecords,
-           bool shouldRemoveDuplicates) {
+           bool shouldRemoveDuplicates, StorageDevice &ssd) {
     this->removeDuplicate = shouldRemoveDuplicates;
     this->numRuns = recordList.size();
     this->numLeaves = this->numRuns;
     this->numRecords = numRecords;
     this->numInnerNodes = (this->numLeaves % 2 + this->numLeaves / 2) * 2 - 1;
+    this->runDevice = ssd;
     cout << this->numInnerNodes << " INNER NODES" << endl;
 
     this->numNodes = numLeaves + this->numInnerNodes;
@@ -56,7 +147,7 @@ Tree::Tree(vector<vector<DataRecord *>> &recordList, int numRecords,
         heap[i].sortedRun = recordList[i - numInnerNodes];
         heap[i].isLeaf = true;
         heap[i].isEmpty = false;
-        heap[i].dataIndex = i;
+        heap[i].dataIndex = i - numInnerNodes;
         heap[i].sortedRunIndex = 0;
     }
 }
@@ -111,6 +202,7 @@ void Tree::generateSortedRun() {
             }
         } else {
             this->generated_run.push_back(this->heap[0].dataRecord);
+            // if genarated_run.size = 1000, append
         }
         this->heap[0].dataRecord = NULL;
     }

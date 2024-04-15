@@ -1,8 +1,7 @@
 #include "Scan.h"
 
-#include <vector>
-
 #include <iostream>
+#include <vector>
 
 #include "defs.h"
 
@@ -48,10 +47,10 @@ DataRecord ScanPlan::GetRecord(RowCount const rowid) const {
     return this->_rows[rowid];
 }  // ScanPlan::GetRecord
 
-std::vector<DataRecord> ScanPlan::GetAllRecords() {
-    std::vector<DataRecord> recList(_count);
+std::vector<DataRecord*> ScanPlan::GetAllRecords() {
+    std::vector<DataRecord*> recList(_count);
     for (RowCount i = 0; i < _count; i++) {
-        recList[i] = this->_rows[i];
+        recList[i] = &this->_rows[i];
     }
     return recList;
 }

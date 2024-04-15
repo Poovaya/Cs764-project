@@ -90,10 +90,12 @@ bool DataRecord::compareDataRecords(DataRecord& a, DataRecord& b) {
 }
 
 struct DataRecordComparator {
-    bool operator()(DataRecord& first, DataRecord& second) const {
+    bool operator()(DataRecord* first, DataRecord* second) const {
         // Return true if first should go before second
+        DataRecord a = *first;
+        DataRecord b = *second;
         // return first.data[0][0] < second.data[0][0];  // return true;
-        return DataRecord::compareDataRecords(first, second);
+        return DataRecord::compareDataRecords(a, b);
     }
 };
 

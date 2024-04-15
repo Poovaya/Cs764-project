@@ -4,6 +4,13 @@
 
 #include <filesystem>
 
+StorageDevice::StorageDevice() {
+    this->device_path = "";
+    this->last_run = 0;
+    this->run_offset = map<int, int>();
+    this->ssdSize = 1e11;
+}
+
 StorageDevice::StorageDevice(string device_path) {
     this->device_path = device_path;
     this->last_run = 0;
@@ -111,19 +118,17 @@ int StorageDevice::getTotalRuns() {
     for (const auto &entry :
          std::filesystem::directory_iterator(directory_path)) {
         // if (entry.is_regular_file()) {
-        cout << "IN DIRECT PATH LOOP" << endl;
         ++file_count;
         // }
     }
-    std::cout << file_count << " file_count VAL" << endl;
     return file_count;
 }
 
 void StorageDevice::commitRun() {
     int latestRun = this->getTotalRuns();
-    string mergedRunPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
+    string mergedRunPath = "/home/poovaya/project764/Cs764-project/Barebone" +
                            this->device_path + "/merged_runs";
-    string newRunPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
+    string newRunPath = "/home/poovaya/project764/Cs764-project/Barebone" +
                         this->device_path + "/sorted/sorted_run_" +
                         to_string(last_run + 1);
 

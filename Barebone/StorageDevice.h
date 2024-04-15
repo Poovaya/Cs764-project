@@ -1,25 +1,26 @@
+#pragma once
+
+#include <fstream>
 #include <iostream>
 #include <map>
-#include "defs.h"
-#include "DataRecord.h"
-
 #include <vector>
-#include <fstream>
 
+#include "DataRecord.h"
+#include "defs.h"
 
 using namespace std;
 
 class StorageDevice {
-    public:
+   public:
     int last_run;
     long long int ssdSize;
     map<int, int> run_offset;
     std::string device_path;
     StorageDevice(string device_path);
+    StorageDevice();
     int getTotalRuns();
     void spillRecordsToDisk(bool ifNewFile, vector<DataRecord *> &records);
-    void spillRecordListToDisk(vector<vector<DataRecord*> > record_lists);
+    void spillRecordListToDisk(vector<vector<DataRecord *> > record_lists);
     void commitRun();
-    vector<vector<DataRecord*> >  getRecordsFromRunsOnDisk(int numRecords);
+    vector<vector<DataRecord *> > getRecordsFromRunsOnDisk(int numRecords);
 };
-

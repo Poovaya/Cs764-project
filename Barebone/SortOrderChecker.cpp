@@ -18,8 +18,7 @@ std::vector<std::string> splitString(char *input) {
 
 int main() {
     std::ifstream file(
-        "/home/poovaya/project764/Cs764-project/Barebone/SSD/sorted/"
-        "sorted_run_10",
+        "/home/poovaya/project764/Cs764-project/Barebone/HDD/merged_runs",
         std::ios::binary);  // Open file in binary mode
 
     if (!file.is_open()) {

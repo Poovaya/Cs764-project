@@ -1,15 +1,25 @@
 #include <string.h>
 #include <unistd.h>  // For getopt
 
+#include <algorithm>
 #include <iostream>
 #include <string>
 
 #include "DataRecord.h"
 #include "Scan.h"
-#include "StorageDevice.h"
 #include "Tree.h"
 
 using namespace std;
+
+struct DataRecordComparator {
+    bool operator()(DataRecord *first, DataRecord *second) const {
+        // Return true if first should go before second
+        DataRecord a = *first;
+        DataRecord b = *second;
+        // return first.data[0][0] < second.data[0][0];  // return true;
+        return DataRecord::compareDataRecords(a, b);
+    }
+};
 
 void ssdRuns(StorageDevice &ssd, StorageDevice &hdd) {
     uint ssd_bandwidth = 100 * 1024 * 1024;
@@ -17,26 +27,26 @@ void ssdRuns(StorageDevice &ssd, StorageDevice &hdd) {
     int ssd_page_num_records =
         524;  //(ssd_bandwidth * ssd_latency) / (3 + 1 + 4 * 4);
 
-    while (ssd.getTotalRuns()) {
-        int num_records = 0;
-        vector<DataRecord *> records;
-        vector<vector<DataRecord *>> record_lists;
-        record_lists = ssd.getRecordsFromRunsOnDisk(ssd_page_num_records);
-        for (auto x : record_lists) {
-            num_records += x.size();
-        }
-        if (num_records == 0) return;
-        if (record_lists.size() > 1) {
-            Tree tree = Tree(record_lists, num_records, false);
-
-            tree.generateSortedRun();
-
-            records = tree.generated_run;
-        } else if (record_lists.size() == 1) {
-            records = record_lists[0];
-        }
-        hdd.spillRecordsToDisk(false, records);
+    //  while (ssd.getTotalRuns()) {
+    int num_records = 0;
+    vector<DataRecord *> records;
+    vector<vector<DataRecord *>> record_lists;
+    record_lists = ssd.getRecordsFromRunsOnDisk(ssd_page_num_records);
+    for (auto x : record_lists) {
+        num_records += x.size();
     }
+    if (num_records == 0) return;
+    if (record_lists.size() > 1) {
+        Tree tree = Tree(record_lists, 2000, true, ssd);
+
+        tree.generateSortedRun();
+
+        records = tree.generated_run;
+    } else if (record_lists.size() == 1) {
+        records = record_lists[0];
+    }
+    hdd.spillRecordsToDisk(false, records);
+    //   }
 
     return;
 }
@@ -120,12 +130,11 @@ int main(int argc, char *argv[]) {
             ScanPlan *const plan = new ScanPlan(recordsToGenerate, colWidth);
             recordsToSpill += recordsToGenerate;
 
-            vector<DataRecord> recList = plan->GetAllRecords();
-            Tree miniTree = Tree(recList, true /* duplicates*/);
-            miniTree.generateSortedRun();
+            vector<DataRecord *> recList = plan->GetAllRecords();
 
-            vector<DataRecord *> sortedRecList = miniTree.generated_run;
-            runs.push_back(sortedRecList);
+            sort(recList.begin(), recList.end(), DataRecordComparator());
+
+            runs.push_back(recList);
         }
 
         if (recordsToSpill * ON_DISK_RECORD_SIZE <= ssd.ssdSize) {

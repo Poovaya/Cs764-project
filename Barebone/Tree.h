@@ -1,12 +1,14 @@
+#include "StorageDevice.h"
 #include "DataRecord.h"
 #include "defs.h"
+
 using namespace std;
 class Tree {
    private:
     /* data */
    public:
     Tree();
-    Tree(vector<vector<DataRecord *>> &, int, bool);
+    Tree(vector<vector<DataRecord *>> &, int, bool, StorageDevice &);
     Tree(vector<DataRecord> &, bool);
     ~Tree();
     void generateSortedRun();
@@ -19,6 +21,7 @@ class Tree {
     int numInnerNodes;
     int numRecords;
     bool removeDuplicate;
+    StorageDevice runDevice;
     vector<DataRecord *> generated_run;
     DataRecord *popRecordFromLeafList(Node *);
     DataRecord *getTopRecordFromLeafList(Node *);

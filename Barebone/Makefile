@@ -20,7 +20,7 @@ OBJS=	defs.o Assert.o Test.o \
 		Iterator.o Scan.o Filter.o Sort.o DataRecord.o StorageDevice.o Tree.o 
 
 EXTERNAL_MERGE_SORT_OBJS=	defs.o Assert.o  ExternalMergeSort.o\
-		Iterator.o Scan.o Filter.o Sort.o DataRecord.o StorageDevice.o Tree.o 
+		Iterator.o Scan.o Filter.o Sort.o DataRecord.o Tree.o StorageDevice.o 
 
 # RCS assists
 REV=-q -f

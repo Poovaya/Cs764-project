@@ -121,9 +121,9 @@ int StorageDevice::getTotalRuns() {
 
 void StorageDevice::commitRun() {
     int latestRun = this->getTotalRuns();
-    string mergedRunPath = "/home/poovaya/project764/Cs764-project/Barebone" +
+    string mergedRunPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
                            this->device_path + "/merged_runs";
-    string newRunPath = "/home/poovaya/project764/Cs764-project/Barebone" +
+    string newRunPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
                         this->device_path + "/sorted/sorted_run_" +
                         to_string(last_run + 1);
 

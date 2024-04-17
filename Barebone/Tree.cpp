@@ -9,10 +9,14 @@ using namespace std;
 DataRecord *Tree::popRecordFromLeafList(Node *node) {
     int numRecsInNode = node->sortedRun.size();
     // cout << node->sortedRunIndex << endl;
-    if (node->sortedRunIndex >= numRecsInNode) {
+    if (node->sortedRunIndex >= numRecsInNode && this->ramTree == false) {
+        for (auto rec : node->sortedRun) {
+            delete rec;
+        }
+        node->sortedRun.clear();
         vector<DataRecord *> records;
         fstream runfile;
-        string runPath = "/home/kjain38/Cs764-project/Barebone/" +
+        string runPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
                          this->runDevice.device_path + "/sorted/sorted_run_" +
                          to_string(node->dataIndex + 1);
         uint recordSize = 4 * 4 + 3 + 1;
@@ -53,10 +57,15 @@ DataRecord *Tree::popRecordFromLeafList(Node *node) {
         }
         node->sortedRunIndex = 0;
         node->sortedRun = records;
+        delete runs;
+    }
+    if (node->sortedRunIndex >= numRecsInNode && this->ramTree == true) {
+        return NULL;
     }
     DataRecord *dataRecord =
         new DataRecord(*node->sortedRun[node->sortedRunIndex]);
     node->sortedRunIndex++;
+
     return dataRecord;
 }
 
@@ -70,10 +79,14 @@ void Tree::checkforEmptyNode(Node *node) {
 DataRecord *Tree::getTopRecordFromLeafList(Node *node) {
     int numRecsInNode = node->sortedRun.size();
     //  cout << node->sortedRunIndex << endl;
-    if (node->sortedRunIndex >= numRecsInNode) {
+    if (node->sortedRunIndex >= numRecsInNode && this->ramTree == false) {
+        for (auto rec : node->sortedRun) {
+            delete rec;
+        }
+        node->sortedRun.clear();
         vector<DataRecord *> records;
         fstream runfile;
-        string runPath = "/home/kjain38/Cs764-project/Barebone/" +
+        string runPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
                          this->runDevice.device_path + "/sorted/sorted_run_" +
                          to_string(node->dataIndex + 1);
         uint recordSize = 4 * 4 + 3 + 1;
@@ -124,6 +137,10 @@ DataRecord *Tree::getTopRecordFromLeafList(Node *node) {
         }
         node->sortedRunIndex = 0;
         node->sortedRun = records;
+        delete runs;
+    }
+    if (node->sortedRunIndex >= numRecsInNode && this->ramTree == true) {
+        return NULL;
     }
     DataRecord *dataRecord =
         new DataRecord(*node->sortedRun[node->sortedRunIndex]);
@@ -131,13 +148,14 @@ DataRecord *Tree::getTopRecordFromLeafList(Node *node) {
 }
 
 Tree::Tree(vector<vector<DataRecord *>> &recordList, int numRecords,
-           bool shouldRemoveDuplicates, StorageDevice &ssd) {
+           bool shouldRemoveDuplicates, StorageDevice &ssd, bool ramTree) {
     this->removeDuplicate = shouldRemoveDuplicates;
     this->numRuns = recordList.size();
     this->numLeaves = this->numRuns;
     this->numRecords = numRecords;
     this->numInnerNodes = (this->numLeaves % 2 + this->numLeaves / 2) * 2 - 1;
     this->runDevice = ssd;
+    this->ramTree = ramTree;
     cout << this->numInnerNodes << " INNER NODES" << endl;
 
     this->numNodes = numLeaves + this->numInnerNodes;

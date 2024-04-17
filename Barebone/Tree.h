@@ -1,5 +1,5 @@
-#include "StorageDevice.h"
 #include "DataRecord.h"
+#include "StorageDevice.h"
 #include "defs.h"
 
 using namespace std;
@@ -8,7 +8,7 @@ class Tree {
     /* data */
    public:
     Tree();
-    Tree(vector<vector<DataRecord *>> &, int, bool, StorageDevice &);
+    Tree(vector<vector<DataRecord *>> &, int, bool, StorageDevice &, bool);
     Tree(vector<DataRecord> &, bool);
     ~Tree();
     void generateSortedRun();
@@ -18,6 +18,7 @@ class Tree {
     void printHeap();
     int numLeaves;
     int numNodes;
+    bool ramTree;
     int numInnerNodes;
     int numRecords;
     bool removeDuplicate;

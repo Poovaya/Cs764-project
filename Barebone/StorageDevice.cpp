@@ -16,13 +16,21 @@ StorageDevice::StorageDevice(string device_path) {
     this->last_run = 0;
     this->run_offset = map<int, int>();
     this->ssdSize = 1e11;
+    if (device_path == "SSD") {
+        this->pageSize = 20972;
+    } else {
+        this->pageSize = 524288;
+    }
 }
 
 void StorageDevice::spillRecordsToDisk(bool ifNewFile,
-                                       vector<DataRecord *> &records) {
+                                       vector<DataRecord *> &records,
+                                       int specificFile) {
     string runPath =
-        "/home/kjain38/Cs764-project/Barebone/" + this->device_path;
-    if (ifNewFile) {
+        "/home/poovaya/project764/Cs764-project/Barebone/" + this->device_path;
+    if (specificFile >= 1) {
+        runPath += "/sorted/sorted_run_" + to_string(specificFile);
+    } else if (ifNewFile) {
         runPath += "/sorted/sorted_run_" + to_string(this->getTotalRuns() + 1);
 
     } else {
@@ -39,6 +47,7 @@ void StorageDevice::spillRecordsToDisk(bool ifNewFile,
         DataRecord *record = records[ii];
         string str_record = record->getRecord();
         str_records += str_record + "|";
+        delete record;
     }
     runfile << str_records;
 
@@ -51,7 +60,7 @@ void StorageDevice::spillRecordsToDisk(bool ifNewFile,
 void StorageDevice::spillRecordListToDisk(
     vector<vector<DataRecord *> > record_lists) {
     for (uint ii = 0; ii < record_lists.size(); ii++) {
-        this->spillRecordsToDisk(true, record_lists[ii]);
+        this->spillRecordsToDisk(true, record_lists[ii], -1);
     }
 }
 
@@ -62,7 +71,7 @@ vector<vector<DataRecord *> > StorageDevice::getRecordsFromRunsOnDisk(
     for (uint ii = 1; ii <= this->getTotalRuns(); ii++) {
         vector<DataRecord *> records;
         fstream runfile;
-        string runPath = "/home/kjain38/Cs764-project/Barebone/" +
+        string runPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
                          this->device_path + "/sorted/sorted_run_" +
                          to_string(ii);
         uint recordSize = 4 * 4 + 3 + 1;
@@ -98,7 +107,7 @@ vector<vector<DataRecord *> > StorageDevice::getRecordsFromRunsOnDisk(
             records.push_back(record);
             start += recordSize;
         }
-
+        delete runs;
         recordLists.push_back(records);
     }
 
@@ -111,7 +120,7 @@ int StorageDevice::getTotalRuns() {
     uint count = 0;
 
     const std::string directory_path =
-        "/home/kjain38/Cs764-project/Barebone/" + this->device_path +
+        "/home/poovaya/project764/Cs764-project/Barebone/" + this->device_path +
         "/sorted";  // Replace this with your directory path
     int file_count = 0;
 
@@ -126,9 +135,9 @@ int StorageDevice::getTotalRuns() {
 
 void StorageDevice::commitRun() {
     int latestRun = this->getTotalRuns();
-    string mergedRunPath = "/home/kjain38/Cs764-project/Barebone/" +
+    string mergedRunPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
                            this->device_path + "/merged_runs";
-    string newRunPath = "/home/kjain38/Cs764-project/Barebone/" +
+    string newRunPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
                         this->device_path + "/sorted/sorted_run_" +
                         to_string(last_run + 1);
 
@@ -137,4 +146,17 @@ void StorageDevice::commitRun() {
     }
 
     return;
+}
+
+StorageDevice::StorageDevice(const StorageDevice &other) {
+    // Copy the device path
+    this->device_path = other.device_path;
+
+    // Copy other member variables
+    this->last_run = other.last_run;
+    this->ssdSize = other.ssdSize;
+    this->pageSize = other.pageSize;
+
+    // Copy the run_offset map
+    this->run_offset = other.run_offset;
 }

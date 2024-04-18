@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "DataRecord.h"
+#include "RecordDetails.h"
 #include "defs.h"
 
 using namespace std;
@@ -21,8 +22,8 @@ class StorageDevice {
     StorageDevice();
     int getTotalRuns();
     void spillRecordsToDisk(bool ifNewFile, vector<DataRecord *> &records, int);
-    void spillRecordListToDisk(vector<vector<DataRecord *> > record_lists);
+    void spillRecordListToDisk(vector<RecordDetails* > record_lists);
     void commitRun();
-    vector<vector<DataRecord *> > getRecordsFromRunsOnDisk(int numRecords);
+    vector<RecordDetails*> getRecordsFromRunsOnDisk(int numRecords);
     StorageDevice(const StorageDevice &other);
 };

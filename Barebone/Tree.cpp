@@ -16,7 +16,7 @@ DataRecord *Tree::popRecordFromLeafList(Node *node) {
         node->sortedRun.clear();
         vector<DataRecord *> records;
         fstream runfile;
-        string runPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
+        string runPath = "/home/kjain38/Cs764-project/Barebone/" +
                          this->runDevice.device_path + "/sorted/sorted_run_" +
                          to_string(node->dataIndex + 1);
         uint recordSize = 4 * 4 + 3 + 1;
@@ -86,7 +86,7 @@ DataRecord *Tree::getTopRecordFromLeafList(Node *node) {
         node->sortedRun.clear();
         vector<DataRecord *> records;
         fstream runfile;
-        string runPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
+        string runPath = "/home/kjain38/Cs764-project/Barebone/" +
                          this->runDevice.device_path + "/sorted/sorted_run_" +
                          to_string(node->dataIndex + 1);
         uint recordSize = 4 * 4 + 3 + 1;
@@ -147,10 +147,10 @@ DataRecord *Tree::getTopRecordFromLeafList(Node *node) {
     return dataRecord;
 }
 
-Tree::Tree(vector<vector<DataRecord *>> &recordList, int numRecords,
+Tree::Tree(vector<RecordDetails*> &recordDetailsList, int numRecords,
            bool shouldRemoveDuplicates, StorageDevice &ssd, bool ramTree) {
     this->removeDuplicate = shouldRemoveDuplicates;
-    this->numRuns = recordList.size();
+    this->numRuns = recordDetailsList.size();
     this->numLeaves = this->numRuns;
     this->numRecords = numRecords;
     this->numInnerNodes = (this->numLeaves % 2 + this->numLeaves / 2) * 2 - 1;
@@ -171,7 +171,7 @@ Tree::Tree(vector<vector<DataRecord *>> &recordList, int numRecords,
     }
 
     for (int i = numInnerNodes; i < numNodes; i++) {
-        heap[i].sortedRun = recordList[i - numInnerNodes];
+        heap[i].sortedRun = recordDetailsList[i - numInnerNodes]->recordLists;
         heap[i].isLeaf = true;
         heap[i].isEmpty = false;
         heap[i].dataIndex = i - numInnerNodes;

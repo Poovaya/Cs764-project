@@ -27,7 +27,7 @@ void StorageDevice::spillRecordsToDisk(bool ifNewFile,
                                        vector<DataRecord *> &records,
                                        int specificFile) {
     string runPath =
-        "/home/poovaya/project764/Cs764-project/Barebone/" + this->device_path;
+        "/home/kjain38/Cs764-project/Barebone/" + this->device_path;
     if (specificFile >= 1) {
         runPath += "/sorted/sorted_run_" + to_string(specificFile);
     } else if (ifNewFile) {
@@ -64,21 +64,30 @@ void StorageDevice::spillRecordListToDisk(
     }
 }
 
-vector<vector<DataRecord *> > StorageDevice::getRecordsFromRunsOnDisk(
+vector<RecordDetails*> StorageDevice::getRecordsFromRunsOnDisk(
     int numRecords) {
-    vector<vector<DataRecord *> > recordLists;
+    vector<RecordDetails* > recordDetailsLists;
 
     for (uint ii = 1; ii <= this->getTotalRuns(); ii++) {
         vector<DataRecord *> records;
+        RecordDetails* recordDetails;
         fstream runfile;
-        string runPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
+        string runPath = "/home/kjain38/Cs764-project/Barebone/" +
                          this->device_path + "/sorted/sorted_run_" +
                          to_string(ii);
+        recordDetails->runPath = runPath;
+
+        if (this->device_path == "SSD") {
+            recordDetails->deviceType = Type::SSD;
+        } else {
+            recordDetails->deviceType = Type::HDD;
+        }
+
         uint recordSize = 4 * 4 + 3 + 1;
         char *runs = new char[numRecords * recordSize + 1];
 
         runfile.open(runPath, fstream::in);
-        if (!runfile.is_open()) return recordLists;
+        if (!runfile.is_open()) return recordDetailsLists;
 
         runfile.seekg(this->run_offset[ii], fstream::beg);
 
@@ -107,11 +116,13 @@ vector<vector<DataRecord *> > StorageDevice::getRecordsFromRunsOnDisk(
             records.push_back(record);
             start += recordSize;
         }
+
+        recordDetails->recordLists = records;
         delete runs;
-        recordLists.push_back(records);
+        recordDetailsLists.push_back(recordDetails);
     }
 
-    return recordLists;
+    return recordDetailsLists;
 }
 
 int StorageDevice::getTotalRuns() {
@@ -120,7 +131,7 @@ int StorageDevice::getTotalRuns() {
     uint count = 0;
 
     const std::string directory_path =
-        "/home/poovaya/project764/Cs764-project/Barebone/" + this->device_path +
+        "/home/kjain38/Cs764-project/Barebone/" + this->device_path +
         "/sorted";  // Replace this with your directory path
     int file_count = 0;
 
@@ -135,9 +146,9 @@ int StorageDevice::getTotalRuns() {
 
 void StorageDevice::commitRun() {
     int latestRun = this->getTotalRuns();
-    string mergedRunPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
+    string mergedRunPath = "/home/kjain38/Cs764-project/Barebone/" +
                            this->device_path + "/merged_runs";
-    string newRunPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
+    string newRunPath = "/home/kjain38/Cs764-project/Barebone/" +
                         this->device_path + "/sorted/sorted_run_" +
                         to_string(last_run + 1);
 

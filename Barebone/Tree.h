@@ -1,5 +1,6 @@
 #include "DataRecord.h"
 #include "StorageDevice.h"
+#include "RecordDetails.h"
 #include "defs.h"
 
 using namespace std;
@@ -8,7 +9,7 @@ class Tree {
     /* data */
    public:
     Tree();
-    Tree(vector<vector<DataRecord *>> &, int, bool, StorageDevice &, bool);
+    Tree(vector<RecordDetails*> &, int, bool, StorageDevice &, bool);
     Tree(vector<DataRecord> &, bool);
     ~Tree();
     void generateSortedRun();
@@ -40,6 +41,8 @@ struct Node {
     // For leaf nodes
     vector<DataRecord *> sortedRun;
     int sortedRunIndex;
+    string runPath;
+    Type deviceType;
     bool isLeaf;
     bool isEmpty;
 };

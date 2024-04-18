@@ -7,6 +7,7 @@
 #include <string>
 
 #include "DataRecord.h"
+#include "RecordDetails.h"
 #include "DeviceConstants.h"
 #include "Scan.h"
 #include "Tree.h"
@@ -27,12 +28,12 @@ struct DataRecordComparator {
     }
 };
 
-void dramRuns(vector<vector<DataRecord *>> &runsInMemory, StorageDevice &device,
+void dramRuns(vector<RecordDetails*> &runsInMemory, StorageDevice &device,
               bool isFinal, int fileIndex) {
     int cacheSize = 1024 * 1024;
     int n = 0;
     for (auto x : runsInMemory) {
-        n += x.size();
+        n += x->recordLists.size();
     }
     if (runsInMemory.size() > 1) {
         Tree tree = Tree(runsInMemory, n, true, device, true);
@@ -59,7 +60,7 @@ void dramRuns(vector<vector<DataRecord *>> &runsInMemory, StorageDevice &device,
         device.spillRecordsToDisk(!isFinal, records, fileIndex);
     } else if (runsInMemory.size() == 1) {
         vector<DataRecord *> records;
-        for (auto rec : runsInMemory[0]) {
+        for (auto rec : runsInMemory[0]->recordLists) {
             records.push_back(rec);
             if (records.size() * recordSize >= device.pageSize) {
                 device.spillRecordsToDisk(!isFinal, records, fileIndex);
@@ -78,14 +79,14 @@ void ssdRuns(StorageDevice &ssd, StorageDevice &hdd) {
 
     //  while (ssd.getTotalRuns()) {
     int num_records = 0;
-    vector<vector<DataRecord *>> record_lists;
-    record_lists = ssd.getRecordsFromRunsOnDisk(ssd_page_num_records);
-    for (auto x : record_lists) {
-        num_records += x.size();
+    vector<RecordDetails*> recordDetailsLists;
+    recordDetailsLists = ssd.getRecordsFromRunsOnDisk(ssd_page_num_records);
+    for (auto x : recordDetailsLists) {
+        num_records += x->recordLists.size();
     }
     if (num_records == 0) return;
-    if (record_lists.size() > 1) {
-        Tree tree = Tree(record_lists, numRecords, true, ssd, false);
+    if (recordDetailsLists.size() > 1) {
+        Tree tree = Tree(recordDetailsLists, numRecords, true, ssd, false);
 
         // tree.generateSortedRun();
 
@@ -108,13 +109,13 @@ void ssdRuns(StorageDevice &ssd, StorageDevice &hdd) {
         vector<DataRecord *> records = tree.generated_run;
         tree.generated_run.clear();
         hdd.spillRecordsToDisk(false, records, -1);
-    } else if (record_lists.size() == 1) {
+    } else if (recordDetailsLists.size() == 1) {
         // Only one run in SSD;
-        // records = record_lists[0];
+        // records = recordDetailsLists[0];
         // hdd.spillRecordsToDisk(false, records);
-        string ssdRunPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
+        string ssdRunPath = "/home/kjain38/Cs764-project/Barebone/" +
                             ssd.device_path + "/sorted/sorted_run_1";
-        string hddRunPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
+        string hddRunPath = "/home/kjain38/Cs764-project/Barebone/" +
                             hdd.device_path + "/merged_runs";
 
         if (access(ssdRunPath.c_str(), F_OK) == 0) {
@@ -135,11 +136,11 @@ void hddRuns(StorageDevice &ssd, StorageDevice &hdd) {
         return;
     }
     while (hdd.getTotalRuns()) {
-        vector<vector<DataRecord *>> record_lists;
+        vector<RecordDetails*> recordDetailsLists;
 
-        record_lists = hdd.getRecordsFromRunsOnDisk(hdd_page_num_records);
+        recordDetailsLists = hdd.getRecordsFromRunsOnDisk(hdd_page_num_records);
 
-        ssd.spillRecordListToDisk(record_lists);
+        // ssd.spillRecordListToDisk(recordDetailsLists);
         ssdRuns(ssd, hdd);
     }
 
@@ -203,7 +204,7 @@ int main(int argc, char *argv[]) {
         sort(recList.begin(), recList.end(), DataRecordComparator());
         // WE ARE DONE
         string runPath =
-            "/home/poovaya/project764/Cs764-project/Barebone/HDD/merged_runs";
+            "/home/kjain38/Cs764-project/Barebone/HDD/merged_runs";
 
         fstream runfile;
         string str_records = "";
@@ -223,7 +224,7 @@ int main(int argc, char *argv[]) {
 
     // > 1MB < 100MB
     if (totalDataSize <= availableDramSize) {
-        vector<vector<DataRecord *>> runsInMemory;
+        vector<RecordDetails*> runsInMemory;
         while (initialNumRecords > 0) {
             int recordsToGenerate =
                 std::min(initialNumRecords, cacheMiniRunSize);
@@ -233,7 +234,12 @@ int main(int argc, char *argv[]) {
             vector<DataRecord *> recList = plan->GetAllRecords();
 
             sort(recList.begin(), recList.end(), DataRecordComparator());
-            runsInMemory.push_back(recList);
+
+            RecordDetails* recordDetails = new RecordDetails;
+            recordDetails->recordLists = recList;
+            recordDetails->runPath = "";
+            recordDetails->deviceType = Type::DRAM;
+            runsInMemory.push_back(recordDetails);
         }
         dramRuns(runsInMemory, hdd, true, -1);
 
@@ -246,7 +252,7 @@ int main(int argc, char *argv[]) {
         int ssdRunIndex = 1;
         vector<ScanPlan *> toDelete;
         while (initialNumRecords > 0) {
-            vector<vector<DataRecord *>> runsInMemory;
+            vector<RecordDetails*> runsInMemory;
             long long int dramInitialNumRecords =
                 std::min(numRecsThatCanFitInRam, initialNumRecords);
             initialNumRecords -= dramInitialNumRecords;
@@ -261,10 +267,18 @@ int main(int argc, char *argv[]) {
                 vector<DataRecord *> recList = plan->GetAllRecords();
 
                 sort(recList.begin(), recList.end(), DataRecordComparator());
-                runsInMemory.push_back(recList);
+
+                RecordDetails* recordDetails = new RecordDetails;
+                recordDetails->recordLists = recList;
+                recordDetails->runPath = "";
+                recordDetails->deviceType = Type::DRAM;
+                runsInMemory.push_back(recordDetails);
                 recList.clear();
             }
             dramRuns(runsInMemory, ssd, false, ssdRunIndex);
+            for (int i=0;i<runsInMemory.size();i++) {
+                delete runsInMemory[0];
+            }
             runsInMemory.clear();
             for (auto p : toDelete) {
                 delete p;

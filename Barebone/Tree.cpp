@@ -4,10 +4,15 @@
 #include <vector>
 
 #include "StorageDevice.h"
-
+extern int recordSize;
+extern int ON_DISK_RECORD_SIZE;
 using namespace std;
+
 DataRecord *Tree::popRecordFromLeafList(Node *node) {
     int numRecsInNode = node->sortedRun.size();
+    if (numRecsInNode == 0) {
+        return NULL;
+    }
     // cout << node->sortedRunIndex << endl;
     if (node->sortedRunIndex >= numRecsInNode && this->ramTree == false) {
         for (auto rec : node->sortedRun) {
@@ -16,12 +21,14 @@ DataRecord *Tree::popRecordFromLeafList(Node *node) {
         node->sortedRun.clear();
         vector<DataRecord *> records;
         fstream runfile;
-        string runPath = "/home/kjain38/Cs764-project/Barebone/" +
-                         this->runDevice.device_path + "/sorted/sorted_run_" +
-                         to_string(node->dataIndex + 1);
-        uint recordSize = 4 * 4 + 3 + 1;
-        int numRecords = 524;
-        char *runs = new char[numRecords * recordSize + 1];
+
+        string runPath = node->runPath;
+
+        // int numRecords = 525;
+        int pageSize = node->getDevicePageSize();
+        int numRecords = pageSize / ON_DISK_RECORD_SIZE + 1;
+
+        char *runs = new char[numRecords * ON_DISK_RECORD_SIZE + 1];
 
         runfile.open(runPath, fstream::in);
         if (!runfile.is_open()) return NULL;
@@ -34,7 +41,7 @@ DataRecord *Tree::popRecordFromLeafList(Node *node) {
         runfile.seekg(this->runDevice.run_offset[node->dataIndex + 1],
                       fstream::beg);
 
-        runfile.get(runs, numRecords * recordSize + 1);
+        runfile.get(runs, numRecords * ON_DISK_RECORD_SIZE + 1);
         runfile.close();
         this->runDevice.run_offset[node->dataIndex + 1] += strlen(runs);
 
@@ -44,16 +51,18 @@ DataRecord *Tree::popRecordFromLeafList(Node *node) {
         while (start < strlen(runs)) {
             string record_str;
 
-            record_str = s.substr(start, recordSize);
-            string col_value1 = record_str.substr(0, 4);
-            string col_value2 = record_str.substr(5, 4);
-            string col_value3 = record_str.substr(4 * 2 + 2, 4);
-            string col_value4 = record_str.substr(4 * 3 + 3, 4);
+            record_str = s.substr(start, ON_DISK_RECORD_SIZE);
+            int col_width = (ON_DISK_RECORD_SIZE - 4) / 4;
+
+            string col_value1 = record_str.substr(0, col_width);
+            string col_value2 = record_str.substr(col_width + 1, col_width);
+            string col_value3 = record_str.substr(col_width * 2 + 2, col_width);
+            string col_value4 = record_str.substr(col_width * 3 + 3, col_width);
 
             DataRecord *record =
                 new DataRecord(col_value1, col_value2, col_value3, col_value4);
             records.push_back(record);
-            start += recordSize;
+            start += ON_DISK_RECORD_SIZE;
         }
         node->sortedRunIndex = 0;
         node->sortedRun = records;
@@ -78,6 +87,9 @@ void Tree::checkforEmptyNode(Node *node) {
 
 DataRecord *Tree::getTopRecordFromLeafList(Node *node) {
     int numRecsInNode = node->sortedRun.size();
+    if (numRecsInNode == 0) {
+        return NULL;
+    }
     //  cout << node->sortedRunIndex << endl;
     if (node->sortedRunIndex >= numRecsInNode && this->ramTree == false) {
         for (auto rec : node->sortedRun) {
@@ -86,21 +98,16 @@ DataRecord *Tree::getTopRecordFromLeafList(Node *node) {
         node->sortedRun.clear();
         vector<DataRecord *> records;
         fstream runfile;
-        string runPath = "/home/kjain38/Cs764-project/Barebone/" +
-                         this->runDevice.device_path + "/sorted/sorted_run_" +
-                         to_string(node->dataIndex + 1);
-        uint recordSize = 4 * 4 + 3 + 1;
-        int numRecords = 524;
-        char *runs = new char[numRecords * recordSize + 1];
+        string runPath = node->runPath;
+
+        int pageSize = node->getDevicePageSize();
+        int numRecords = pageSize / ON_DISK_RECORD_SIZE + 1;
+        char *runs = new char[numRecords * ON_DISK_RECORD_SIZE + 1];
 
         runfile.open(runPath, fstream::in);
         if (!runfile.is_open()) return NULL;
 
         streampos fileSize = runfile.tellg();
-
-        // if (this->runDevice.run_offset[node->dataIndex + 1] >= fileSize) {
-        //     return NULL;
-        // }
 
         // Get the file size
         runfile.seekg(0, std::ios::end);
@@ -110,7 +117,7 @@ DataRecord *Tree::getTopRecordFromLeafList(Node *node) {
         runfile.seekg(this->runDevice.run_offset[node->dataIndex + 1],
                       fstream::beg);
 
-        runfile.get(runs, numRecords * recordSize + 1);
+        runfile.get(runs, numRecords * ON_DISK_RECORD_SIZE + 1);
         runfile.close();
         this->runDevice.run_offset[node->dataIndex + 1] += strlen(runs);
 
@@ -124,16 +131,17 @@ DataRecord *Tree::getTopRecordFromLeafList(Node *node) {
         while (start < strlen(runs)) {
             string record_str;
 
-            record_str = s.substr(start, recordSize);
-            string col_value1 = record_str.substr(0, 4);
-            string col_value2 = record_str.substr(5, 4);
-            string col_value3 = record_str.substr(4 * 2 + 2, 4);
-            string col_value4 = record_str.substr(4 * 3 + 3, 4);
+            record_str = s.substr(start, ON_DISK_RECORD_SIZE);
+            int col_width = (ON_DISK_RECORD_SIZE - 4) / 4;
+            string col_value1 = record_str.substr(0, col_width);
+            string col_value2 = record_str.substr(col_width + 1, col_width);
+            string col_value3 = record_str.substr(col_width * 2 + 2, col_width);
+            string col_value4 = record_str.substr(col_width * 3 + 3, col_width);
 
             DataRecord *record =
                 new DataRecord(col_value1, col_value2, col_value3, col_value4);
             records.push_back(record);
-            start += recordSize;
+            start += ON_DISK_RECORD_SIZE;
         }
         node->sortedRunIndex = 0;
         node->sortedRun = records;
@@ -147,9 +155,13 @@ DataRecord *Tree::getTopRecordFromLeafList(Node *node) {
     return dataRecord;
 }
 
-Tree::Tree(vector<RecordDetails*> &recordDetailsList, int numRecords,
+Tree::Tree(vector<RecordDetails *> &recordDetailsList, int numRecords,
            bool shouldRemoveDuplicates, StorageDevice &ssd, bool ramTree) {
     this->removeDuplicate = shouldRemoveDuplicates;
+    if (recordDetailsList.size() % 2) {
+        RecordDetails *x = new RecordDetails;
+        recordDetailsList.push_back(x);
+    }
     this->numRuns = recordDetailsList.size();
     this->numLeaves = this->numRuns;
     this->numRecords = numRecords;
@@ -176,6 +188,8 @@ Tree::Tree(vector<RecordDetails*> &recordDetailsList, int numRecords,
         heap[i].isEmpty = false;
         heap[i].dataIndex = i - numInnerNodes;
         heap[i].sortedRunIndex = 0;
+        heap[i].runPath = recordDetailsList[i - numInnerNodes]->runPath;
+        heap[i].deviceType = recordDetailsList[i - numInnerNodes]->deviceType;
     }
 }
 

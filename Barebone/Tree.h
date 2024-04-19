@@ -1,6 +1,6 @@
 #include "DataRecord.h"
-#include "StorageDevice.h"
 #include "RecordDetails.h"
+#include "StorageDevice.h"
 #include "defs.h"
 
 using namespace std;
@@ -9,7 +9,7 @@ class Tree {
     /* data */
    public:
     Tree();
-    Tree(vector<RecordDetails*> &, int, bool, StorageDevice &, bool);
+    Tree(vector<RecordDetails *> &, int, bool, StorageDevice &, bool);
     Tree(vector<DataRecord> &, bool);
     ~Tree();
     void generateSortedRun();
@@ -31,6 +31,7 @@ class Tree {
     //  vector<DataRecord *> getGeneratedRun();
 
     void printSortedRun(vector<DataRecord *>);
+    void fetchNextPage(Node *);
 };
 
 struct Node {
@@ -45,4 +46,11 @@ struct Node {
     Type deviceType;
     bool isLeaf;
     bool isEmpty;
+    int getDevicePageSize() {
+        if (deviceType == Type::SSD) {
+            return 20972;
+        } else {
+            return 524288;
+        }
+    };
 };

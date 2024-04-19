@@ -7,8 +7,8 @@
 #include <string>
 
 #include "DataRecord.h"
-#include "RecordDetails.h"
 #include "DeviceConstants.h"
+#include "RecordDetails.h"
 #include "Scan.h"
 #include "Tree.h"
 using namespace std;
@@ -28,7 +28,7 @@ struct DataRecordComparator {
     }
 };
 
-void dramRuns(vector<RecordDetails*> &runsInMemory, StorageDevice &device,
+void dramRuns(vector<RecordDetails *> &runsInMemory, StorageDevice &device,
               bool isFinal, int fileIndex) {
     int cacheSize = 1024 * 1024;
     int n = 0;
@@ -74,12 +74,14 @@ void dramRuns(vector<RecordDetails*> &runsInMemory, StorageDevice &device,
 void ssdRuns(StorageDevice &ssd, StorageDevice &hdd) {
     uint ssd_bandwidth = 100 * 1024 * 1024;
     double ssd_latency = 0.0001;
-    int ssd_page_num_records =
-        525;  //(ssd_bandwidth * ssd_latency) / (3 + 1 + 4 * 4);
+    // int ssd_page_num_records =
+    //     525;  //(ssd_bandwidth * ssd_latency) / (3 + 1 + 4 * 4);
+
+    int ssd_page_num_records = ssd.pageSize / ON_DISK_RECORD_SIZE + 1;
 
     //  while (ssd.getTotalRuns()) {
     int num_records = 0;
-    vector<RecordDetails*> recordDetailsLists;
+    vector<RecordDetails *> recordDetailsLists;
     recordDetailsLists = ssd.getRecordsFromRunsOnDisk(ssd_page_num_records);
     for (auto x : recordDetailsLists) {
         num_records += x->recordLists.size();
@@ -113,9 +115,9 @@ void ssdRuns(StorageDevice &ssd, StorageDevice &hdd) {
         // Only one run in SSD;
         // records = recordDetailsLists[0];
         // hdd.spillRecordsToDisk(false, records);
-        string ssdRunPath = "/home/kjain38/Cs764-project/Barebone/" +
+        string ssdRunPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
                             ssd.device_path + "/sorted/sorted_run_1";
-        string hddRunPath = "/home/kjain38/Cs764-project/Barebone/" +
+        string hddRunPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
                             hdd.device_path + "/merged_runs";
 
         if (access(ssdRunPath.c_str(), F_OK) == 0) {
@@ -130,13 +132,13 @@ void hddRuns(StorageDevice &ssd, StorageDevice &hdd) {
     uint hdd_bandwidth = 100 * 1024 * 1024;
     double hdd_latency = 5 * 1e-3;
     uint hdd_page_num_records =
-        26214;  // (hdd_bandwidth * hdd_latency) / (3 + 1 + 4 * 4);
+        26215;  // (hdd_bandwidth * hdd_latency) / (3 + 1 + 4 * 4);
 
     if (hdd.getTotalRuns() == 1) {
         return;
     }
     while (hdd.getTotalRuns()) {
-        vector<RecordDetails*> recordDetailsLists;
+        vector<RecordDetails *> recordDetailsLists;
 
         recordDetailsLists = hdd.getRecordsFromRunsOnDisk(hdd_page_num_records);
 
@@ -179,6 +181,7 @@ int main(int argc, char *argv[]) {
     StorageDevice hdd = StorageDevice("HDD");
 
     recordSize = recordSize * sizeof(char);
+    ON_DISK_RECORD_SIZE = recordSize + 3 + 1;
     int colWidth = recordSize / 4;
     ON_DISK_RECORD_SIZE = (4 * colWidth + 3 + 1);
 
@@ -204,7 +207,7 @@ int main(int argc, char *argv[]) {
         sort(recList.begin(), recList.end(), DataRecordComparator());
         // WE ARE DONE
         string runPath =
-            "/home/kjain38/Cs764-project/Barebone/HDD/merged_runs";
+            "/home/poovaya/project764/Cs764-project/Barebone/HDD/merged_runs";
 
         fstream runfile;
         string str_records = "";
@@ -224,7 +227,7 @@ int main(int argc, char *argv[]) {
 
     // > 1MB < 100MB
     if (totalDataSize <= availableDramSize) {
-        vector<RecordDetails*> runsInMemory;
+        vector<RecordDetails *> runsInMemory;
         while (initialNumRecords > 0) {
             int recordsToGenerate =
                 std::min(initialNumRecords, cacheMiniRunSize);
@@ -235,7 +238,7 @@ int main(int argc, char *argv[]) {
 
             sort(recList.begin(), recList.end(), DataRecordComparator());
 
-            RecordDetails* recordDetails = new RecordDetails;
+            RecordDetails *recordDetails = new RecordDetails;
             recordDetails->recordLists = recList;
             recordDetails->runPath = "";
             recordDetails->deviceType = Type::DRAM;
@@ -252,7 +255,7 @@ int main(int argc, char *argv[]) {
         int ssdRunIndex = 1;
         vector<ScanPlan *> toDelete;
         while (initialNumRecords > 0) {
-            vector<RecordDetails*> runsInMemory;
+            vector<RecordDetails *> runsInMemory;
             long long int dramInitialNumRecords =
                 std::min(numRecsThatCanFitInRam, initialNumRecords);
             initialNumRecords -= dramInitialNumRecords;
@@ -268,7 +271,7 @@ int main(int argc, char *argv[]) {
 
                 sort(recList.begin(), recList.end(), DataRecordComparator());
 
-                RecordDetails* recordDetails = new RecordDetails;
+                RecordDetails *recordDetails = new RecordDetails;
                 recordDetails->recordLists = recList;
                 recordDetails->runPath = "";
                 recordDetails->deviceType = Type::DRAM;
@@ -276,8 +279,8 @@ int main(int argc, char *argv[]) {
                 recList.clear();
             }
             dramRuns(runsInMemory, ssd, false, ssdRunIndex);
-            for (int i=0;i<runsInMemory.size();i++) {
-                delete runsInMemory[0];
+            for (int i = 0; i < runsInMemory.size(); i++) {
+                delete runsInMemory[i];
             }
             runsInMemory.clear();
             for (auto p : toDelete) {

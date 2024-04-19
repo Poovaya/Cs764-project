@@ -3,7 +3,8 @@
 #include <unistd.h>
 
 #include <filesystem>
-
+extern int recordSize;
+extern int ON_DISK_RECORD_SIZE;
 StorageDevice::StorageDevice() {
     this->device_path = "";
     this->last_run = 0;
@@ -27,7 +28,7 @@ void StorageDevice::spillRecordsToDisk(bool ifNewFile,
                                        vector<DataRecord *> &records,
                                        int specificFile) {
     string runPath =
-        "/home/kjain38/Cs764-project/Barebone/" + this->device_path;
+        "/home/poovaya/project764/Cs764-project/Barebone/" + this->device_path;
     if (specificFile >= 1) {
         runPath += "/sorted/sorted_run_" + to_string(specificFile);
     } else if (ifNewFile) {
@@ -57,22 +58,22 @@ void StorageDevice::spillRecordsToDisk(bool ifNewFile,
     return;
 }
 
-void StorageDevice::spillRecordListToDisk(
-    vector<vector<DataRecord *> > record_lists) {
-    for (uint ii = 0; ii < record_lists.size(); ii++) {
-        this->spillRecordsToDisk(true, record_lists[ii], -1);
-    }
-}
+// void StorageDevice::spillRecordListToDisk(
+//     vector<vector<DataRecord *> > record_lists) {
+//     for (uint ii = 0; ii < record_lists.size(); ii++) {
+//         this->spillRecordsToDisk(true, record_lists[ii], -1);
+//     }
+// }
 
-vector<RecordDetails*> StorageDevice::getRecordsFromRunsOnDisk(
+vector<RecordDetails *> StorageDevice::getRecordsFromRunsOnDisk(
     int numRecords) {
-    vector<RecordDetails* > recordDetailsLists;
+    vector<RecordDetails *> recordDetailsLists;
 
     for (uint ii = 1; ii <= this->getTotalRuns(); ii++) {
         vector<DataRecord *> records;
-        RecordDetails* recordDetails;
+        RecordDetails *recordDetails = new RecordDetails;
         fstream runfile;
-        string runPath = "/home/kjain38/Cs764-project/Barebone/" +
+        string runPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
                          this->device_path + "/sorted/sorted_run_" +
                          to_string(ii);
         recordDetails->runPath = runPath;
@@ -83,19 +84,18 @@ vector<RecordDetails*> StorageDevice::getRecordsFromRunsOnDisk(
             recordDetails->deviceType = Type::HDD;
         }
 
-        uint recordSize = 4 * 4 + 3 + 1;
-        char *runs = new char[numRecords * recordSize + 1];
+        char *runs = new char[numRecords * ON_DISK_RECORD_SIZE + 1];
 
         runfile.open(runPath, fstream::in);
         if (!runfile.is_open()) return recordDetailsLists;
 
         runfile.seekg(this->run_offset[ii], fstream::beg);
 
-        runfile.get(runs, numRecords * recordSize + 1);
+        runfile.get(runs, numRecords * ON_DISK_RECORD_SIZE + 1);
         runfile.close();
         this->run_offset[ii] += strlen(runs);
 
-        if (strlen(runs) != (numRecords * recordSize)) {
+        if (strlen(runs) != (numRecords * ON_DISK_RECORD_SIZE)) {
             remove(runPath.c_str());
         }
 
@@ -105,7 +105,7 @@ vector<RecordDetails*> StorageDevice::getRecordsFromRunsOnDisk(
         while (start < strlen(runs)) {
             string record_str;
 
-            record_str = s.substr(start, recordSize);
+            record_str = s.substr(start, ON_DISK_RECORD_SIZE);
             string col_value1 = record_str.substr(0, 4);
             string col_value2 = record_str.substr(5, 4);
             string col_value3 = record_str.substr(4 * 2 + 2, 4);
@@ -114,7 +114,7 @@ vector<RecordDetails*> StorageDevice::getRecordsFromRunsOnDisk(
             DataRecord *record =
                 new DataRecord(col_value1, col_value2, col_value3, col_value4);
             records.push_back(record);
-            start += recordSize;
+            start += ON_DISK_RECORD_SIZE;
         }
 
         recordDetails->recordLists = records;
@@ -131,7 +131,7 @@ int StorageDevice::getTotalRuns() {
     uint count = 0;
 
     const std::string directory_path =
-        "/home/kjain38/Cs764-project/Barebone/" + this->device_path +
+        "/home/poovaya/project764/Cs764-project/Barebone/" + this->device_path +
         "/sorted";  // Replace this with your directory path
     int file_count = 0;
 
@@ -146,9 +146,9 @@ int StorageDevice::getTotalRuns() {
 
 void StorageDevice::commitRun() {
     int latestRun = this->getTotalRuns();
-    string mergedRunPath = "/home/kjain38/Cs764-project/Barebone/" +
+    string mergedRunPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
                            this->device_path + "/merged_runs";
-    string newRunPath = "/home/kjain38/Cs764-project/Barebone/" +
+    string newRunPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
                         this->device_path + "/sorted/sorted_run_" +
                         to_string(last_run + 1);
 

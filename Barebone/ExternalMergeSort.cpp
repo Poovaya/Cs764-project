@@ -100,8 +100,8 @@ void ssdRuns(StorageDevice &ssd, StorageDevice &hdd) {
             tree.heap[0].dataRecord = NULL;
             if (tree.generated_run.size() * recordSize >= hdd.pageSize) {
                 vector<DataRecord *> records = tree.generated_run;
-                tree.generated_run.clear();
                 hdd.spillRecordsToDisk(false, records, -1);
+                tree.generated_run.clear();
             }
         }
 

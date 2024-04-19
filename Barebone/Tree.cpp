@@ -8,6 +8,10 @@
 using namespace std;
 DataRecord *Tree::popRecordFromLeafList(Node *node) {
     int numRecsInNode = node->sortedRun.size();
+    if (numRecsInNode == 0) {
+        return NULL;
+    }
+
     // cout << node->sortedRunIndex << endl;
     if (node->sortedRunIndex >= numRecsInNode && this->ramTree == false) {
         for (auto rec : node->sortedRun) {
@@ -20,7 +24,7 @@ DataRecord *Tree::popRecordFromLeafList(Node *node) {
                          this->runDevice.device_path + "/sorted/sorted_run_" +
                          to_string(node->dataIndex + 1);
         uint recordSize = 4 * 4 + 3 + 1;
-        int numRecords = 524;
+        int numRecords = 525;
         char *runs = new char[numRecords * recordSize + 1];
 
         runfile.open(runPath, fstream::in);
@@ -78,7 +82,9 @@ void Tree::checkforEmptyNode(Node *node) {
 
 DataRecord *Tree::getTopRecordFromLeafList(Node *node) {
     int numRecsInNode = node->sortedRun.size();
-    //  cout << node->sortedRunIndex << endl;
+    if (numRecsInNode == 0) {
+        return NULL;
+    }  //  cout << node->sortedRunIndex << endl;
     if (node->sortedRunIndex >= numRecsInNode && this->ramTree == false) {
         for (auto rec : node->sortedRun) {
             delete rec;
@@ -90,7 +96,7 @@ DataRecord *Tree::getTopRecordFromLeafList(Node *node) {
                          this->runDevice.device_path + "/sorted/sorted_run_" +
                          to_string(node->dataIndex + 1);
         uint recordSize = 4 * 4 + 3 + 1;
-        int numRecords = 524;
+        int numRecords = 525;
         char *runs = new char[numRecords * recordSize + 1];
 
         runfile.open(runPath, fstream::in);
@@ -150,6 +156,10 @@ DataRecord *Tree::getTopRecordFromLeafList(Node *node) {
 Tree::Tree(vector<vector<DataRecord *>> &recordList, int numRecords,
            bool shouldRemoveDuplicates, StorageDevice &ssd, bool ramTree) {
     this->removeDuplicate = shouldRemoveDuplicates;
+    if (recordList.size() % 2) {
+        vector<DataRecord *> x;
+        recordList.push_back(x);
+    }
     this->numRuns = recordList.size();
     this->numLeaves = this->numRuns;
     this->numRecords = numRecords;

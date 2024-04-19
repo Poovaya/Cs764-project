@@ -1,0 +1,25 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      
+      {
+        "name": "C/C++: g++ build and debug active file WORKING",
+        "type": "cppdbg",
+        "request": "launch",
+        "program": "/home/poovaya/project764/Cs764-project/Barebone/ExternalMergeSort.exe",
+        "args": ["-c", "15000000", "-s", "16", "-o", "run.out"],
+        "stopAtEntry": false,
+        "cwd": "/home/poovaya/project764/Cs764-project/Barebone",
+        "environment": [],
+        "externalConsole": false,
+        "MIMode": "gdb",
+        "miDebuggerPath": "/usr/bin/gdb",
+        "setupCommands": [
+          {
+            "description": "Enable pretty-printing for gdb",
+            "text": "-enable-pretty-printing",
+            "ignoreFailures": true
+          }
+        ]      }
+    ]
+  }

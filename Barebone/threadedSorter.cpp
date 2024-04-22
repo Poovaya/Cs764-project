@@ -42,7 +42,7 @@ void processChunk(const std::string& chunk) {
 
 int main() {
     std::ifstream file(
-        "/home/poovaya/project764/Cs764-project/Barebone/HDD/merged_runs",
+        "/home/poovaya/project764/Cs764-project/Barebone/HDD/output",
         std::ios::binary);
 
     if (!file.is_open()) {

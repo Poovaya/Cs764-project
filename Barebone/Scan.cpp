@@ -2,6 +2,10 @@
 
 #include <iostream>
 #include <vector>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <string>
 
 #include "defs.h"
 
@@ -11,6 +15,24 @@ ScanPlan::ScanPlan(RowCount const count, int column_width) : _count(count) {
         this->_rows[i].initRandomRecord(column_width);
         this->_rows[i].column_width = column_width;
     }
+
+    std::string runPath = "/home/poovaya/project764/Cs764-project/Barebone/HDD/input"; 
+
+    std::string str_records = "";
+    std::fstream runfile;
+    for (uint ii = 0; ii < this->_rows.size(); ii++) {
+        DataRecord record = (this->_rows[ii]);
+        std::string str_record = record.getRecord();
+        str_records += str_record + "|";
+    }
+
+    runfile.open(runPath, std::fstream::out | std::fstream::app);
+    if (!runfile.is_open()) return;
+
+    runfile << str_records;
+
+    runfile.close();
+
     TRACE(true);
 }  // ScanPlan::ScanPlan
 

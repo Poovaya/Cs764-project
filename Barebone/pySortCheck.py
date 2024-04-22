@@ -13,7 +13,7 @@ def check_sorted(filename):
                     ans =  False
     return ans, j
 
-filename = '/home/poovaya/project764/Cs764-project/Barebone/HDD/merged_runs'  # Replace 'your_file.txt' with the actual filename
+filename = '/home/poovaya/project764/Cs764-project/Barebone/HDD/output'  # Replace 'your_file.txt' with the actual filename
 val, i = check_sorted(filename)
 if val:
     print("All elements are alphanumerically sorted.")

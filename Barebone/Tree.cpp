@@ -156,7 +156,7 @@ DataRecord *Tree::getTopRecordFromLeafList(Node *node) {
 }
 
 Tree::Tree(vector<RecordDetails *> &recordDetailsList, int numRecords,
-           bool shouldRemoveDuplicates, StorageDevice &ssd, bool ramTree) {
+           bool shouldRemoveDuplicates, StorageDevice &device, bool ramTree) {
     this->removeDuplicate = shouldRemoveDuplicates;
     if (recordDetailsList.size() % 2) {
         RecordDetails *x = new RecordDetails;
@@ -166,7 +166,7 @@ Tree::Tree(vector<RecordDetails *> &recordDetailsList, int numRecords,
     this->numLeaves = this->numRuns;
     this->numRecords = numRecords;
     this->numInnerNodes = (this->numLeaves % 2 + this->numLeaves / 2) * 2 - 1;
-    this->runDevice = ssd;
+    this->runDevice = device;
     this->ramTree = ramTree;
     cout << this->numInnerNodes << " INNER NODES" << endl;
 

@@ -71,13 +71,14 @@ void dramRuns(vector<RecordDetails *> &runsInMemory, StorageDevice &device,
     }
 }
 
-void ssdRuns(StorageDevice &ssd, StorageDevice &hdd) {
-    uint ssd_bandwidth = 100 * 1024 * 1024;
+void ssdRuns(StorageDevice &ssd, StorageDevice &hdd, bool isFinal,
+             int hddRunIndex, long long int recordsToPutInTree) {
+    uint ssd_bandwidth = 200 * 1024 * 1024;
     double ssd_latency = 0.0001;
     // int ssd_page_num_records =
     //     525;  //(ssd_bandwidth * ssd_latency) / (3 + 1 + 4 * 4);
 
-    int ssd_page_num_records = ssd.pageSize / ON_DISK_RECORD_SIZE + 1;
+    int ssd_page_num_records = ssd.pageSize / ON_DISK_RECORD_SIZE;
 
     //  while (ssd.getTotalRuns()) {
     int num_records = 0;
@@ -88,7 +89,64 @@ void ssdRuns(StorageDevice &ssd, StorageDevice &hdd) {
     }
     if (num_records == 0) return;
     if (recordDetailsLists.size() > 1) {
-        Tree tree = Tree(recordDetailsLists, numRecords, true, ssd, false);
+        Tree tree =
+            Tree(recordDetailsLists, recordsToPutInTree, true, ssd, false);
+
+        // tree.generateSortedRun();
+
+        for (int i = 0; i < tree.numRecords; i++) {
+            for (int inner_node_index = tree.numInnerNodes;
+                 inner_node_index >= 0; inner_node_index--) {
+                tree.run_tournament(inner_node_index);
+            }
+
+            tree.generated_run.push_back(tree.heap[0].dataRecord);
+
+            tree.heap[0].dataRecord = NULL;
+            if (tree.generated_run.size() * recordSize >= hdd.pageSize) {
+                vector<DataRecord *> records = tree.generated_run;
+
+                hdd.spillRecordsToDisk(!isFinal, records, hddRunIndex);
+                tree.generated_run.clear();
+                records.clear();
+            }
+        }
+
+        vector<DataRecord *> records = tree.generated_run;
+        hdd.spillRecordsToDisk(!isFinal, records, hddRunIndex);
+        tree.generated_run.clear();
+    } else if (recordDetailsLists.size() == 1) {
+        // Only one run in SSD;
+        // records = recordDetailsLists[0];
+        // hdd.spillRecordsToDisk(false, records);
+        string ssdRunPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
+                            ssd.device_path + "/sorted/sorted_run_1";
+        string hddRunPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
+                            hdd.device_path + "/output";
+
+        if (access(ssdRunPath.c_str(), F_OK) == 0) {
+            rename(ssdRunPath.c_str(), hddRunPath.c_str());
+        }
+    }
+
+    return;
+}
+
+void hddRuns(StorageDevice &ssd, StorageDevice &hdd) {
+    uint hdd_bandwidth = 100 * 1024 * 1024;
+    double hdd_latency = 5 * 1e-3;
+    uint hdd_page_num_records =
+        (hdd_bandwidth * hdd_latency) / ON_DISK_RECORD_SIZE + 1;
+
+    int num_records = 0;
+    vector<RecordDetails *> recordDetailsLists;
+    recordDetailsLists = hdd.getRecordsFromRunsOnDisk(hdd_page_num_records);
+    for (auto x : recordDetailsLists) {
+        num_records += x->recordLists.size();
+    }
+    if (num_records == 0) return;
+    if (recordDetailsLists.size() > 1) {
+        Tree tree = Tree(recordDetailsLists, numRecords, true, hdd, false);
 
         // tree.generateSortedRun();
 
@@ -104,6 +162,7 @@ void ssdRuns(StorageDevice &ssd, StorageDevice &hdd) {
             if (tree.generated_run.size() * recordSize >= hdd.pageSize) {
                 vector<DataRecord *> records = tree.generated_run;
                 tree.generated_run.clear();
+
                 hdd.spillRecordsToDisk(false, records, -1);
             }
         }
@@ -116,34 +175,13 @@ void ssdRuns(StorageDevice &ssd, StorageDevice &hdd) {
         // records = recordDetailsLists[0];
         // hdd.spillRecordsToDisk(false, records);
         string ssdRunPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
-                            ssd.device_path + "/sorted/sorted_run_1";
+                            hdd.device_path + "/sorted/sorted_run_1";
         string hddRunPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
-                            hdd.device_path + "/merged_runs";
+                            hdd.device_path + "/output";
 
         if (access(ssdRunPath.c_str(), F_OK) == 0) {
             rename(ssdRunPath.c_str(), hddRunPath.c_str());
         }
-    }
-
-    return;
-}
-
-void hddRuns(StorageDevice &ssd, StorageDevice &hdd) {
-    uint hdd_bandwidth = 100 * 1024 * 1024;
-    double hdd_latency = 5 * 1e-3;
-    uint hdd_page_num_records =
-        26215;  // (hdd_bandwidth * hdd_latency) / (3 + 1 + 4 * 4);
-
-    if (hdd.getTotalRuns() == 1) {
-        return;
-    }
-    while (hdd.getTotalRuns()) {
-        vector<RecordDetails *> recordDetailsLists;
-
-        recordDetailsLists = hdd.getRecordsFromRunsOnDisk(hdd_page_num_records);
-
-        // ssd.spillRecordListToDisk(recordDetailsLists);
-        ssdRuns(ssd, hdd);
     }
 
     return;
@@ -187,10 +225,11 @@ int main(int argc, char *argv[]) {
 
     int dramSize = 100 * 1024 * 1024;
     long long int ssdSize = 10LL * 1024LL * 1024LL * 1024LL;
-    long long int totalDataSize = recordSize * numRecords;
+    long long int totalDataSize = ON_DISK_RECORD_SIZE * numRecords;
 
     int availableDramSize = dramSize * 0.9;
     long long int numRecsThatCanFitInRam = availableDramSize / recordSize + 1;
+    long long int numRecsThatCanFitInSSD = ssdSize / ON_DISK_RECORD_SIZE;
     int cacheSize = 1024 * 1024;
     int fanIn = 5000;
     long long int initialNumRecords = numRecords;
@@ -207,7 +246,7 @@ int main(int argc, char *argv[]) {
         sort(recList.begin(), recList.end(), DataRecordComparator());
         // WE ARE DONE
         string runPath =
-            "/home/poovaya/project764/Cs764-project/Barebone/HDD/merged_runs";
+            "/home/poovaya/project764/Cs764-project/Barebone/HDD/output";
 
         fstream runfile;
         string str_records = "";
@@ -289,68 +328,60 @@ int main(int argc, char *argv[]) {
             toDelete.clear();
             ssdRunIndex++;
         }
-        ssdRuns(ssd, hdd);
+        ssdRuns(ssd, hdd, true, -1, numRecords);
         return 0;
     }
 
-    // while (numRecords) {
-    //  int remNumRecordsInDram =
-    //      std::min((dramSize / ON_DISK_RECORD_SIZE), numRecords);
-    //  int recordCount = 0;
-    //  vector<vector<DataRecord *>> runs;
+    if (totalDataSize > ssdSize) {
+        int hddRunIndex = 1;
+        while (initialNumRecords > 0) {
+            int ssdRunIndex = 1;
+            vector<ScanPlan *> toDelete;
+            long long int ssdInitialNumRecords =
+                std::min(numRecsThatCanFitInSSD, initialNumRecords);
+            long long int recordsToPutInTree = ssdInitialNumRecords;
+            initialNumRecords -= ssdInitialNumRecords;
+            while (ssdInitialNumRecords > 0) {
+                vector<RecordDetails *> runsInMemory;
+                long long int dramInitialNumRecords =
+                    std::min(numRecsThatCanFitInRam, ssdInitialNumRecords);
+                ssdInitialNumRecords -= dramInitialNumRecords;
+                while (dramInitialNumRecords > 0) {
+                    int recordsToGenerate =
+                        std::min(dramInitialNumRecords, cacheMiniRunSize);
+                    dramInitialNumRecords -= recordsToGenerate;
+                    recordsGeneratedSoFar += recordsToGenerate;
+                    ScanPlan *const plan =
+                        new ScanPlan(recordsToGenerate, colWidth);
+                    toDelete.push_back(plan);
+                    vector<DataRecord *> recList = plan->GetAllRecords();
 
-    // int recordsToSpill = 0;
-    // while (remNumRecordsInDram > 0) {
-    //     int recordsToGenerate = 0;
-    //     if (numRecordsPerRun >= remNumRecordsInDram) {
-    //         numRecords -= remNumRecordsInDram;
-    //         recordsToGenerate = remNumRecordsInDram;
-    //         remNumRecordsInDram = 0;
-    //     } else {
-    //         remNumRecordsInDram -= numRecordsPerRun;
-    //         numRecords -= numRecordsPerRun;
-    //         recordsToGenerate = numRecordsPerRun;
-    //     }
+                    sort(recList.begin(), recList.end(),
+                         DataRecordComparator());
 
-    //     ScanPlan *const plan = new ScanPlan(recordsToGenerate, colWidth);
-    //     recordsToSpill += recordsToGenerate;
-
-    //     vector<DataRecord *> recList = plan->GetAllRecords();
-
-    //     sort(recList.begin(), recList.end(), DataRecordComparator());
-
-    //     runs.push_back(recList);
-    // }
-    //   int recordsToGenerate = std::min(numRecords, cacheMiniRunSize);
-    //   numRecords -= recordsToGenerate;
-    //   recordsGeneratedSoFar += recordsToGenerate;
-    //   ScanPlan *const plan = new ScanPlan(recordsToGenerate, colWidth);
-    //   vector<DataRecord *> recList = plan->GetAllRecords();
-    // sort(recList.begin(), recList.end(), DataRecordComparator());
-    // if (initialNumRecords <= cacheMiniRunSize) {
-    //     // WE ARE DONE
-    //     hdd.spillRecordsToDisk(false, recList);
-    //     return 0;
-    // }
-    // if (availableDramSize >= recList.size() * recordSize) {
-    //     runsInMemory.push_back(recList);
-    //     availableDramSize -= recList.size() * recordSize;
-    // } else if (ssd.ssdSize >= 0) {
-    //     ssd.spillRecordsToDisk(true, recList);
-    // } else {
-    //     hdd.spillRecordsToDisk(true, recList);
-    // }
-
-    // if (recordsToSpill * ON_DISK_RECORD_SIZE <= ssd.ssdSize) {
-    //     ssd.spillRecordListToDisk(runs);
-    // } else {
-    //     hdd.spillRecordListToDisk(runs);
-    //    // }
-    // }
-    // dramRuns(runsInMemory, ssd);
-    // ssdRuns(ssd, hdd);
-    // hdd.commitRun();
-    // hddRuns(ssd, hdd);c
-
+                    RecordDetails *recordDetails = new RecordDetails;
+                    recordDetails->recordLists = recList;
+                    recordDetails->runPath = "";
+                    recordDetails->deviceType = Type::DRAM;
+                    runsInMemory.push_back(recordDetails);
+                    recList.clear();
+                }
+                dramRuns(runsInMemory, ssd, false, ssdRunIndex);
+                for (int i = 0; i < runsInMemory.size(); i++) {
+                    delete runsInMemory[i];
+                }
+                runsInMemory.clear();
+                for (auto p : toDelete) {
+                    delete p;
+                }
+                toDelete.clear();
+                ssdRunIndex++;
+            }
+            ssdRuns(ssd, hdd, false, hddRunIndex, recordsToPutInTree);
+            hddRunIndex++;
+        }
+        hddRuns(ssd, hdd);
+        return 0;
+    }
     return 0;
 }

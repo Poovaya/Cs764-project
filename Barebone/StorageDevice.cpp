@@ -35,7 +35,7 @@ void StorageDevice::spillRecordsToDisk(bool ifNewFile,
         runPath += "/sorted/sorted_run_" + to_string(this->getTotalRuns() + 1);
 
     } else {
-        runPath += "/merged_runs";
+        runPath += "/output";
     }
 
     fstream runfile;
@@ -46,6 +46,7 @@ void StorageDevice::spillRecordsToDisk(bool ifNewFile,
 
     for (uint ii = 0; ii < records.size(); ii++) {
         DataRecord *record = records[ii];
+        if (record == NULL) continue;
         string str_record = record->getRecord();
         str_records += str_record + "|";
         delete record;
@@ -147,7 +148,7 @@ int StorageDevice::getTotalRuns() {
 void StorageDevice::commitRun() {
     int latestRun = this->getTotalRuns();
     string mergedRunPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
-                           this->device_path + "/merged_runs";
+                           this->device_path + "/output";
     string newRunPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
                         this->device_path + "/sorted/sorted_run_" +
                         to_string(last_run + 1);

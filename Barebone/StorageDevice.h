@@ -16,14 +16,15 @@ class StorageDevice {
     int last_run;
     long long int ssdSize;
     int pageSize;
-    map<int, int> run_offset;
+    map<long long int, long long int> run_offset;
     std::string device_path;
     StorageDevice(string device_path);
     StorageDevice();
     int getTotalRuns();
     void spillRecordsToDisk(bool ifNewFile, vector<DataRecord *> &records, int);
-    void spillRecordListToDisk(vector<RecordDetails* > record_lists);
+    void spillRecordListToDisk(vector<RecordDetails *> record_lists);
     void commitRun();
-    vector<RecordDetails*> getRecordsFromRunsOnDisk(int numRecords);
+    vector<RecordDetails *> getRecordsFromRunsOnDisk(int numRecords);
     StorageDevice(const StorageDevice &other);
+    string lastValidString;
 };

@@ -6,7 +6,7 @@
 
 #include "DataRecord.h"
 
-std::vector<std::string> splitString(char *input) {
+std::vector<std::string> splitString(char* input) {
     std::istringstream iss(input);
     std::vector<std::string> result;
     std::string token;
@@ -16,7 +16,14 @@ std::vector<std::string> splitString(char *input) {
     return result;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+    if (argc != 2) {
+        std::cerr << "Usage: " << argv[0] << " <integer>" << std::endl;
+        return 1;
+    }
+
+    int record_size = std::atoi(argv[1]);
+    int onDiskSize = record_size + 1;
     std::ifstream file(
         "/home/poovaya/project764/Cs764-project/Barebone/HDD/output",
         std::ios::binary);  // Open file in binary mode
@@ -27,7 +34,8 @@ int main() {
     }
 
     // const int numBytesToRead = 20;
-    const int numBytesToRead = 10000;
+    int numBytesToRead = (10000 / onDiskSize);
+    numBytesToRead = numBytesToRead * onDiskSize;
     char buffer[numBytesToRead];  // Create a buffer to store the read bytes
     DataRecord currRec;
     DataRecord nextRec;
@@ -35,24 +43,22 @@ int main() {
     while (file.read(buffer, numBytesToRead)) {
         // Process the data in the buffer
         int start = 0;
-        char dataRecordBytes[20];
-        for (int curr = 0; curr < 20; curr++) {
+        char dataRecordBytes[onDiskSize];
+        for (int curr = 0; curr < onDiskSize; curr++) {
             dataRecordBytes[curr] = buffer[start];
             start++;
         }
-        dataRecordBytes[19] = '\0';
-        std::vector<std::string> result = splitString(dataRecordBytes);
-        currRec = DataRecord(result[0], result[1], result[2], result[3]);
+        dataRecordBytes[onDiskSize - 1] = '\0';
+        currRec = DataRecord(dataRecordBytes);
 
         while (start < numBytesToRead) {
-            for (int curr = 0; curr < 20; curr++) {
+            for (int curr = 0; curr < onDiskSize; curr++) {
                 dataRecordBytes[curr] = buffer[start];
                 start++;
             }
-            dataRecordBytes[19] = '\0';
-            result = splitString(dataRecordBytes);
+            dataRecordBytes[onDiskSize - 1] = '\0';
 
-            nextRec = DataRecord(result[0], result[1], result[2], result[3]);
+            nextRec = DataRecord(dataRecordBytes);
             if (!(DataRecord::compareDataRecords(currRec, nextRec))) {
                 currRec.show();
                 nextRec.show();
@@ -76,25 +82,22 @@ int main() {
         while (file.read(buffer, numBytesToRead)) {
             // Process the data in the buffer
             int start = 0;
-            char dataRecordBytes[20];
-            for (int curr = 0; curr < 20; curr++) {
+            char dataRecordBytes[onDiskSize];
+            for (int curr = 0; curr < onDiskSize; curr++) {
                 dataRecordBytes[curr] = buffer[start];
                 start++;
             }
-            dataRecordBytes[19] = '\0';
-            std::vector<std::string> result = splitString(dataRecordBytes);
-            currRec = DataRecord(result[0], result[1], result[2], result[3]);
+            dataRecordBytes[onDiskSize - 1] = '\0';
+            currRec = DataRecord(dataRecordBytes);
 
             while (start < numBytesToRead) {
-                for (int curr = 0; curr < 20; curr++) {
+                for (int curr = 0; curr < onDiskSize; curr++) {
                     dataRecordBytes[curr] = buffer[start];
                     start++;
                 }
-                dataRecordBytes[19] = '\0';
-                result = splitString(dataRecordBytes);
+                dataRecordBytes[onDiskSize - 1] = '\0';
 
-                nextRec =
-                    DataRecord(result[0], result[1], result[2], result[3]);
+                nextRec = DataRecord(dataRecordBytes);
                 if (!(DataRecord::compareDataRecords(currRec, nextRec))) {
                     std::cout << "BAD ORDER1" << std::endl;
                     return 0;

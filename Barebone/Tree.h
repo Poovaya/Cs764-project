@@ -27,6 +27,7 @@ class Tree {
     vector<DataRecord *> generated_run;
     DataRecord *popRecordFromLeafList(Node *);
     DataRecord *getTopRecordFromLeafList(Node *);
+    void pushRecordToGeneratedRun(DataRecord *);
     void checkforEmptyNode(Node *);
     //  vector<DataRecord *> getGeneratedRun();
 

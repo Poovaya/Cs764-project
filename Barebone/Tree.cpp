@@ -33,9 +33,11 @@ DataRecord *Tree::popRecordFromLeafList(Node *node) {
         runfile.open(runPath, fstream::in);
         if (!runfile.is_open()) return NULL;
 
-        streampos fileSize = runfile.tellg();
-
-        if (this->runDevice.run_offset[node->dataIndex + 1] >= fileSize)
+        // Get the file size
+        runfile.seekg(0, std::ios::end);
+        std::streampos file_size = runfile.tellg();
+        runfile.seekg(0, std::ios::beg);
+        if (this->runDevice.run_offset[node->dataIndex + 1] >= file_size)
             return NULL;
 
         runfile.seekg(this->runDevice.run_offset[node->dataIndex + 1],
@@ -44,6 +46,9 @@ DataRecord *Tree::popRecordFromLeafList(Node *node) {
         runfile.get(runs, numRecords * ON_DISK_RECORD_SIZE + 1);
         runfile.close();
         this->runDevice.run_offset[node->dataIndex + 1] += strlen(runs);
+        if (this->runDevice.run_offset[node->dataIndex + 1] >= file_size) {
+            remove(runPath.c_str());
+        }
 
         string s(runs);
 
@@ -52,15 +57,11 @@ DataRecord *Tree::popRecordFromLeafList(Node *node) {
             string record_str;
 
             record_str = s.substr(start, ON_DISK_RECORD_SIZE);
-            int col_width = (ON_DISK_RECORD_SIZE - 4) / 4;
+            int rec_size = ON_DISK_RECORD_SIZE - 1;
 
-            string col_value1 = record_str.substr(0, col_width);
-            string col_value2 = record_str.substr(col_width + 1, col_width);
-            string col_value3 = record_str.substr(col_width * 2 + 2, col_width);
-            string col_value4 = record_str.substr(col_width * 3 + 3, col_width);
+            string rec_val = record_str.substr(0, rec_size);
 
-            DataRecord *record =
-                new DataRecord(col_value1, col_value2, col_value3, col_value4);
+            DataRecord *record = new DataRecord(rec_val);
             records.push_back(record);
             start += ON_DISK_RECORD_SIZE;
         }
@@ -132,14 +133,10 @@ DataRecord *Tree::getTopRecordFromLeafList(Node *node) {
             string record_str;
 
             record_str = s.substr(start, ON_DISK_RECORD_SIZE);
-            int col_width = (ON_DISK_RECORD_SIZE - 4) / 4;
-            string col_value1 = record_str.substr(0, col_width);
-            string col_value2 = record_str.substr(col_width + 1, col_width);
-            string col_value3 = record_str.substr(col_width * 2 + 2, col_width);
-            string col_value4 = record_str.substr(col_width * 3 + 3, col_width);
+            int rec_size = (ON_DISK_RECORD_SIZE - 1);
+            string rec_str = record_str.substr(0, rec_size);
 
-            DataRecord *record =
-                new DataRecord(col_value1, col_value2, col_value3, col_value4);
+            DataRecord *record = new DataRecord(rec_str);
             records.push_back(record);
             start += ON_DISK_RECORD_SIZE;
         }
@@ -246,6 +243,15 @@ void Tree::generateSortedRun() {
             // if genarated_run.size = 1000, append
         }
         this->heap[0].dataRecord = NULL;
+    }
+}
+
+void Tree::pushRecordToGeneratedRun(DataRecord *record) {
+    int n = this->generated_run.size();
+    if (n == 0 || record == NULL) {
+        this->generated_run.push_back(record);
+    } else if (!(*this->generated_run[n - 1] == *record)) {
+        this->generated_run.push_back(record);
     }
 }
 

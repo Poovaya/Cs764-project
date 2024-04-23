@@ -8,25 +8,28 @@ extern int ON_DISK_RECORD_SIZE;
 StorageDevice::StorageDevice() {
     this->device_path = "";
     this->last_run = 0;
-    this->run_offset = map<int, int>();
+    this->run_offset = map<long long int, long long int>();
     this->ssdSize = 1e11;
+    this->lastValidString = "";
 }
 
 StorageDevice::StorageDevice(string device_path) {
     this->device_path = device_path;
     this->last_run = 0;
-    this->run_offset = map<int, int>();
+    this->run_offset = map<long long int, long long int>();
     this->ssdSize = 1e11;
     if (device_path == "SSD") {
         this->pageSize = 20972;
     } else {
         this->pageSize = 524288;
     }
+    this->lastValidString = "";
 }
 
 void StorageDevice::spillRecordsToDisk(bool ifNewFile,
                                        vector<DataRecord *> &records,
                                        int specificFile) {
+    string delim = "|";
     string runPath =
         "/home/poovaya/project764/Cs764-project/Barebone/" + this->device_path;
     if (specificFile >= 1) {
@@ -36,6 +39,7 @@ void StorageDevice::spillRecordsToDisk(bool ifNewFile,
 
     } else {
         runPath += "/output";
+        delim = "\n";
     }
 
     fstream runfile;
@@ -43,19 +47,23 @@ void StorageDevice::spillRecordsToDisk(bool ifNewFile,
 
     runfile.open(runPath, fstream::out | fstream::app);
     if (!runfile.is_open()) return;
-
+    string str_record;
     for (uint ii = 0; ii < records.size(); ii++) {
         DataRecord *record = records[ii];
-        if (record == NULL) continue;
-        string str_record = record->getRecord();
-        str_records += str_record + "|";
+
+        if (record == NULL) {
+            break;
+        } else {
+            str_record = record->getRecord();
+            this->lastValidString = str_record;
+        }
+        str_records += str_record + delim;
         delete record;
     }
     runfile << str_records;
 
     runfile.close();
 
-    this->ssdSize -= records.size() * (4 * 4 + 3 + 1);
     return;
 }
 
@@ -107,13 +115,9 @@ vector<RecordDetails *> StorageDevice::getRecordsFromRunsOnDisk(
             string record_str;
 
             record_str = s.substr(start, ON_DISK_RECORD_SIZE);
-            string col_value1 = record_str.substr(0, 4);
-            string col_value2 = record_str.substr(5, 4);
-            string col_value3 = record_str.substr(4 * 2 + 2, 4);
-            string col_value4 = record_str.substr(4 * 3 + 3, 4);
+            record_str.pop_back();
 
-            DataRecord *record =
-                new DataRecord(col_value1, col_value2, col_value3, col_value4);
+            DataRecord *record = new DataRecord(record_str);
             records.push_back(record);
             start += ON_DISK_RECORD_SIZE;
         }

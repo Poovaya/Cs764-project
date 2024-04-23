@@ -23,7 +23,6 @@ struct DataRecordComparator {
         // Return true if first should go before second
         DataRecord a = *first;
         DataRecord b = *second;
-        // return first.data[0][0] < second.data[0][0];  // return true;
         return DataRecord::compareDataRecords(a, b);
     }
 };
@@ -44,8 +43,9 @@ void dramRuns(vector<RecordDetails *> &runsInMemory, StorageDevice &device,
                 tree.run_tournament(inner_node_index);
             }
 
-            tree.generated_run.push_back(tree.heap[0].dataRecord);
-            // if generated_run.size = ssd page size, append
+            // tree.generated_run.push_back(tree.heap[0].dataRecord);
+            //  if generated_run.size = ssd page size, append
+            tree.pushRecordToGeneratedRun(tree.heap[0].dataRecord);
 
             tree.heap[0].dataRecord = NULL;
             if (tree.generated_run.size() * recordSize >= device.pageSize) {
@@ -71,7 +71,9 @@ void dramRuns(vector<RecordDetails *> &runsInMemory, StorageDevice &device,
     }
 }
 
-void ssdRuns(StorageDevice &ssd, StorageDevice &hdd, bool isFinal,
+void 
+
+ssdRuns(StorageDevice &ssd, StorageDevice &hdd, bool isFinal,
              int hddRunIndex, long long int recordsToPutInTree) {
     uint ssd_bandwidth = 200 * 1024 * 1024;
     double ssd_latency = 0.0001;
@@ -100,7 +102,8 @@ void ssdRuns(StorageDevice &ssd, StorageDevice &hdd, bool isFinal,
                 tree.run_tournament(inner_node_index);
             }
 
-            tree.generated_run.push_back(tree.heap[0].dataRecord);
+            // tree.generated_run.push_back(tree.heap[0].dataRecord);
+            tree.pushRecordToGeneratedRun(tree.heap[0].dataRecord);
 
             tree.heap[0].dataRecord = NULL;
             if (tree.generated_run.size() * recordSize >= hdd.pageSize) {
@@ -156,7 +159,8 @@ void hddRuns(StorageDevice &ssd, StorageDevice &hdd) {
                 tree.run_tournament(inner_node_index);
             }
 
-            tree.generated_run.push_back(tree.heap[0].dataRecord);
+            // tree.generated_run.push_back(tree.heap[0].dataRecord);
+            tree.pushRecordToGeneratedRun(tree.heap[0].dataRecord);
 
             tree.heap[0].dataRecord = NULL;
             if (tree.generated_run.size() * recordSize >= hdd.pageSize) {
@@ -219,9 +223,7 @@ int main(int argc, char *argv[]) {
     StorageDevice hdd = StorageDevice("HDD");
 
     recordSize = recordSize * sizeof(char);
-    ON_DISK_RECORD_SIZE = recordSize + 3 + 1;
-    int colWidth = recordSize / 4;
-    ON_DISK_RECORD_SIZE = (4 * colWidth + 3 + 1);
+    ON_DISK_RECORD_SIZE = recordSize + 1;
 
     int dramSize = 100 * 1024 * 1024;
     long long int ssdSize = 10LL * 1024LL * 1024LL * 1024LL;
@@ -240,7 +242,7 @@ int main(int argc, char *argv[]) {
 
     // < 1MB
     if (totalDataSize <= cacheSize) {
-        ScanPlan *const plan = new ScanPlan(numRecords, colWidth);
+        ScanPlan *const plan = new ScanPlan(numRecords, recordSize);
         vector<DataRecord *> recList = plan->GetAllRecords();
 
         sort(recList.begin(), recList.end(), DataRecordComparator());
@@ -257,7 +259,7 @@ int main(int argc, char *argv[]) {
         for (uint ii = 0; ii < recList.size(); ii++) {
             DataRecord *record = recList[ii];
             string str_record = record->getRecord();
-            str_records += str_record + "|";
+            str_records += str_record + "\n";
         }
         runfile << str_records;
         runfile.close();
@@ -272,7 +274,7 @@ int main(int argc, char *argv[]) {
                 std::min(initialNumRecords, cacheMiniRunSize);
             initialNumRecords -= recordsToGenerate;
             recordsGeneratedSoFar += recordsToGenerate;
-            ScanPlan *const plan = new ScanPlan(recordsToGenerate, colWidth);
+            ScanPlan *const plan = new ScanPlan(recordsToGenerate, recordSize);
             vector<DataRecord *> recList = plan->GetAllRecords();
 
             sort(recList.begin(), recList.end(), DataRecordComparator());
@@ -304,7 +306,7 @@ int main(int argc, char *argv[]) {
                 dramInitialNumRecords -= recordsToGenerate;
                 recordsGeneratedSoFar += recordsToGenerate;
                 ScanPlan *const plan =
-                    new ScanPlan(recordsToGenerate, colWidth);
+                    new ScanPlan(recordsToGenerate, recordSize);
                 toDelete.push_back(plan);
                 vector<DataRecord *> recList = plan->GetAllRecords();
 
@@ -352,7 +354,7 @@ int main(int argc, char *argv[]) {
                     dramInitialNumRecords -= recordsToGenerate;
                     recordsGeneratedSoFar += recordsToGenerate;
                     ScanPlan *const plan =
-                        new ScanPlan(recordsToGenerate, colWidth);
+                        new ScanPlan(recordsToGenerate, recordSize);
                     toDelete.push_back(plan);
                     vector<DataRecord *> recList = plan->GetAllRecords();
 

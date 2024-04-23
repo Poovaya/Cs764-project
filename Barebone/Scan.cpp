@@ -1,29 +1,28 @@
 #include "Scan.h"
 
-#include <iostream>
-#include <vector>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <vector>
 
 #include "defs.h"
 
-ScanPlan::ScanPlan(RowCount const count, int column_width) : _count(count) {
+ScanPlan::ScanPlan(RowCount const count, int recordSize) : _count(count) {
     this->_rows = std::vector<DataRecord>(count);
     for (RowCount i = 0; i < count; i++) {
-        this->_rows[i].initRandomRecord(column_width);
-        this->_rows[i].column_width = column_width;
+        this->_rows[i].initRandomRecord(recordSize);
     }
 
-    std::string runPath = "/home/poovaya/project764/Cs764-project/Barebone/HDD/input"; 
+    std::string runPath =
+        "/home/poovaya/project764/Cs764-project/Barebone/HDD/input";
 
     std::string str_records = "";
     std::fstream runfile;
     for (uint ii = 0; ii < this->_rows.size(); ii++) {
         DataRecord record = (this->_rows[ii]);
         std::string str_record = record.getRecord();
-        str_records += str_record + "|";
+        str_records += str_record + "\n";
     }
 
     runfile.open(runPath, std::fstream::out | std::fstream::app);
@@ -33,29 +32,31 @@ ScanPlan::ScanPlan(RowCount const count, int column_width) : _count(count) {
 
     runfile.close();
 
-    TRACE(true);
+    // TRACE(true);
 }  // ScanPlan::ScanPlan
 
-ScanPlan::~ScanPlan() { TRACE(true); }  // ScanPlan::~ScanPlan
+ScanPlan::~ScanPlan() {
+    // TRACE(true);
+}  // ScanPlan::~ScanPlan
 
 Iterator* ScanPlan::init() const {
-    TRACE(true);
+    // TRACE(true);
     return new ScanIterator(this);
 }  // ScanPlan::init
 
 ScanIterator::ScanIterator(ScanPlan const* const plan)
     : _plan(plan), _count(0) {
-    TRACE(true);
+    // TRACE(true);
 }  // ScanIterator::ScanIterator
 
 ScanIterator::~ScanIterator() {
-    TRACE(true);
+    //  TRACE(true);
     traceprintf("produced %lu of %lu rows\n", (unsigned long)(_count),
                 (unsigned long)(_plan->_count));
 }  // ScanIterator::~ScanIterator
 
 bool ScanIterator::next() {
-    TRACE(false);
+    //  TRACE(false);
 
     if (_count >= _plan->_count) return false;
     this->_plan->GetRecord(_count).show();

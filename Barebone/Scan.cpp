@@ -22,7 +22,8 @@ ScanPlan::ScanPlan(RowCount const count, int recordSize) : _count(count) {
     for (uint ii = 0; ii < this->_rows.size(); ii++) {
         DataRecord record = (this->_rows[ii]);
         std::string str_record = record.getRecord();
-        str_records += str_record + "\n";
+        str_record[str_record.size() - 1] = '\n';
+        str_records += str_record;
     }
 
     runfile.open(runPath, std::fstream::out | std::fstream::app);

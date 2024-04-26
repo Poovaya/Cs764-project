@@ -56,6 +56,15 @@ void StorageDevice::spillRecordsToDisk(bool ifNewFile,
         //   } else {
         str_record = record->getRecord();
         this->lastValidString = str_record;
+        if (delim == "\n") {
+            if (str_record[str_record.size() - 1] == '\n') {
+            } else if (str_record[str_record.size() - 1] == '|') {
+                str_record[str_record.size() - 1] = '\n';
+            } else {
+                str_record += '\n';
+            }
+            str_record[str_record.size() - 1] = '\n';
+        }
         //    }
         str_records += str_record;
         delete record;
@@ -104,9 +113,9 @@ vector<RecordDetails *> StorageDevice::getRecordsFromRunsOnDisk(
         runfile.close();
         this->run_offset[ii] += strlen(runs);
 
-        if (strlen(runs) != (numRecords * ON_DISK_RECORD_SIZE)) {
-            remove(runPath.c_str());
-        }
+        // if (strlen(runs) != (numRecords * ON_DISK_RECORD_SIZE)) {
+        //     remove(runPath.c_str());
+        // }
 
         string s(runs);
 

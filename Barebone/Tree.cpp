@@ -14,7 +14,8 @@ DataRecord *Tree::popRecordFromLeafList(Node *node) {
         return NULL;
     }
     // cout << node->sortedRunIndex << endl;
-    if (node->sortedRunIndex >= numRecsInNode && this->ramTree == false) {
+    if (node->sortedRunIndex >= numRecsInNode &&
+        node->deviceType != Type::DRAM) {
         for (auto rec : node->sortedRun) {
             delete rec;
         }
@@ -69,7 +70,8 @@ DataRecord *Tree::popRecordFromLeafList(Node *node) {
         node->sortedRun = records;
         delete runs;
     }
-    if (node->sortedRunIndex >= numRecsInNode && this->ramTree == true) {
+    if (node->sortedRunIndex >= numRecsInNode &&
+        node->deviceType == Type::DRAM) {
         return NULL;
     }
     DataRecord *dataRecord =
@@ -92,7 +94,8 @@ DataRecord *Tree::getTopRecordFromLeafList(Node *node) {
         return NULL;
     }
     //  cout << node->sortedRunIndex << endl;
-    if (node->sortedRunIndex >= numRecsInNode && this->ramTree == false) {
+    if (node->sortedRunIndex >= numRecsInNode &&
+        node->deviceType != Type::DRAM) {
         for (auto rec : node->sortedRun) {
             delete rec;
         }
@@ -144,7 +147,8 @@ DataRecord *Tree::getTopRecordFromLeafList(Node *node) {
         node->sortedRun = records;
         delete runs;
     }
-    if (node->sortedRunIndex >= numRecsInNode && this->ramTree == true) {
+    if (node->sortedRunIndex >= numRecsInNode &&
+        node->deviceType == Type::DRAM) {
         return NULL;
     }
     DataRecord *dataRecord =

@@ -48,7 +48,8 @@ void dramRuns(vector<RecordDetails *> &runsInMemory, StorageDevice &device,
             tree.pushRecordToGeneratedRun(tree.heap[0].dataRecord);
 
             tree.heap[0].dataRecord = NULL;
-            if (tree.generated_run.size() * ON_DISK_RECORD_SIZE >= device.pageSize) {
+            if (tree.generated_run.size() * ON_DISK_RECORD_SIZE >=
+                device.pageSize) {
                 vector<DataRecord *> records = tree.generated_run;
                 tree.generated_run.clear();
                 device.spillRecordsToDisk(!isFinal, records, fileIndex);
@@ -110,7 +111,8 @@ ssdRuns(vector<RecordDetails *> runsLeftInMemory, StorageDevice &ssd, StorageDev
             tree.pushRecordToGeneratedRun(tree.heap[0].dataRecord);
 
             tree.heap[0].dataRecord = NULL;
-            if (tree.generated_run.size() * ON_DISK_RECORD_SIZE >= hdd.pageSize) {
+            if (tree.generated_run.size() * ON_DISK_RECORD_SIZE >=
+                hdd.pageSize) {
                 vector<DataRecord *> records = tree.generated_run;
 
                 hdd.spillRecordsToDisk(!isFinal, records, hddRunIndex);

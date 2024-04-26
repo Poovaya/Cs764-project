@@ -58,12 +58,20 @@ void StorageDevice::spillRecordsToDisk(bool ifNewFile,
             this->lastValidString = str_record;
             if (delim == "\n") {
                 if (str_record[str_record.size() - 1] == '\n') {
+                    str_record[str_record.size() - 1] = '\n';
                 } else if (str_record[str_record.size() - 1] == '|') {
                     str_record[str_record.size() - 1] = '\n';
                 } else {
                     str_record += '\n';
                 }
-                str_record[str_record.size() - 1] = '\n';
+            } else {
+                if (str_record[str_record.size() - 1] == '|') {
+                    str_record[str_record.size() - 1] = '|';
+                } else if (str_record[str_record.size() - 1] == '\n') {
+                    str_record[str_record.size() - 1] = '|';
+                } else {
+                    str_record += '|';
+                }
             }
         }
         str_records += str_record;

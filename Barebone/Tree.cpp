@@ -192,6 +192,7 @@ Tree::Tree(vector<RecordDetails *> &recordDetailsList, int numRecords,
            StorageDevice &ssd, StorageDevice &hdd) {
     if (recordDetailsList.size() % 2) {
         RecordDetails *x = new RecordDetails;
+        x->deviceType = Type::DRAM;
         recordDetailsList.push_back(x);
     }
     this->numRuns = recordDetailsList.size();
@@ -260,7 +261,9 @@ void Tree::pushRecordToGeneratedRun(DataRecord *record) {
     int n = this->generated_run.size();
     if (n == 0 || record == NULL) {
         this->generated_run.push_back(record);
-    } else if (!(*this->generated_run[n - 1] == *record)) {
+    } else if (!(*this->generated_run[n - 1] == *record) ||
+               DataRecord::compareDataRecords(*this->generated_run[n - 1],
+                                              *record)) {
         this->generated_run.push_back(record);
     }
 }

@@ -146,13 +146,14 @@ void hddRuns(vector<RecordDetails *> runsLeftInMemoryFinal, StorageDevice &ssd,
 
     int num_records = 0;
     vector<RecordDetails *> recordDetailsLists;
-    recordDetailsLists = hdd.getRecordsFromRunsOnDisk(hdd_page_num_records);
-    auto recordDetailsSSD = ssd.getRecordsFromRunsOnDisk(ssd_page_num_records);
+    recordDetailsLists = ssd.getRecordsFromRunsOnDisk(hdd_page_num_records);
+    auto recordDetailsHDD = hdd.getRecordsFromRunsOnDisk(ssd_page_num_records);
+
+    recordDetailsLists.insert(recordDetailsLists.end(),
+                              recordDetailsHDD.begin(), recordDetailsHDD.end());
     recordDetailsLists.insert(recordDetailsLists.end(),
                               runsLeftInMemoryFinal.begin(),
                               runsLeftInMemoryFinal.end());
-    recordDetailsLists.insert(recordDetailsLists.end(),
-                              recordDetailsSSD.begin(), recordDetailsSSD.end());
     for (auto x : recordDetailsLists) {
         num_records += x->recordLists.size();
     }
@@ -233,7 +234,7 @@ int main(int argc, char *argv[]) {
     ON_DISK_RECORD_SIZE = recordSize + 1;
 
     int dramSize = 100 * 1024 * 1024;
-    long long int ssdSize = 1LL * 1024LL * 1024LL * 1024LL;
+    long long int ssdSize = 10LL * 1024LL * 1024LL * 1024LL;
     long long int totalDataSize = ON_DISK_RECORD_SIZE * numRecords;
 
     // int availableDramSize = dramSize * 0.9;
@@ -366,7 +367,7 @@ int main(int argc, char *argv[]) {
         int hddRunIndex = 1;
         vector<RecordDetails *> runsLeftInMemoryFinal;
         vector<RecordDetails *> runsLeftInMemorySSD;
-        while (initialNumRecords > 0) {
+        while (initialNumRecords > 1) {
             int ssdRunIndex = 1;
             vector<ScanPlan *> toDelete;
             long long int ssdInitialNumRecords = 0;

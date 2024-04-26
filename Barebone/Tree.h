@@ -9,21 +9,19 @@ class Tree {
     /* data */
    public:
     Tree();
-    Tree(vector<RecordDetails *> &, int, bool, StorageDevice &, bool);
+    Tree(vector<RecordDetails *> &, int, StorageDevice &, StorageDevice &);
     Tree(vector<DataRecord> &, bool);
     ~Tree();
-    void generateSortedRun();
     void run_tournament(int);
     int numRuns;
     struct Node *heap;
     void printHeap();
     int numLeaves;
     int numNodes;
-    bool ramTree;
     int numInnerNodes;
     int numRecords;
-    bool removeDuplicate;
-    StorageDevice runDevice;
+    StorageDevice ssd;
+    StorageDevice hdd;
     vector<DataRecord *> generated_run;
     DataRecord *popRecordFromLeafList(Node *);
     DataRecord *getTopRecordFromLeafList(Node *);

@@ -38,17 +38,32 @@ DataRecord *Tree::popRecordFromLeafList(Node *node) {
         runfile.seekg(0, std::ios::end);
         std::streampos file_size = runfile.tellg();
         runfile.seekg(0, std::ios::beg);
-        if (this->runDevice.run_offset[node->dataIndex + 1] >= file_size)
-            return NULL;
+        if (node->deviceType == Type::SSD) {
+            if (this->ssd.run_offset[node->dataIndex + 1] >= file_size)
+                return NULL;
 
-        runfile.seekg(this->runDevice.run_offset[node->dataIndex + 1],
-                      fstream::beg);
+            runfile.seekg(this->ssd.run_offset[node->dataIndex + 1],
+                          fstream::beg);
 
-        runfile.get(runs, numRecords * ON_DISK_RECORD_SIZE + 1);
-        runfile.close();
-        this->runDevice.run_offset[node->dataIndex + 1] += strlen(runs);
-        if (this->runDevice.run_offset[node->dataIndex + 1] >= file_size) {
-            remove(runPath.c_str());
+            runfile.get(runs, numRecords * ON_DISK_RECORD_SIZE + 1);
+            runfile.close();
+            this->ssd.run_offset[node->dataIndex + 1] += strlen(runs);
+            if (this->ssd.run_offset[node->dataIndex + 1] >= file_size) {
+                remove(runPath.c_str());
+            }
+        } else {
+            if (this->hdd.run_offset[node->dataIndex + 1] >= file_size)
+                return NULL;
+
+            runfile.seekg(this->hdd.run_offset[node->dataIndex + 1],
+                          fstream::beg);
+
+            runfile.get(runs, numRecords * ON_DISK_RECORD_SIZE + 1);
+            runfile.close();
+            this->hdd.run_offset[node->dataIndex + 1] += strlen(runs);
+            if (this->hdd.run_offset[node->dataIndex + 1] >= file_size) {
+                remove(runPath.c_str());
+            }
         }
 
         string s(runs);
@@ -118,15 +133,32 @@ DataRecord *Tree::getTopRecordFromLeafList(Node *node) {
         std::streampos file_size = runfile.tellg();
         runfile.seekg(0, std::ios::beg);
 
-        runfile.seekg(this->runDevice.run_offset[node->dataIndex + 1],
-                      fstream::beg);
+        if (node->deviceType == Type::SSD) {
+            if (this->ssd.run_offset[node->dataIndex + 1] >= file_size)
+                return NULL;
 
-        runfile.get(runs, numRecords * ON_DISK_RECORD_SIZE + 1);
-        runfile.close();
-        this->runDevice.run_offset[node->dataIndex + 1] += strlen(runs);
+            runfile.seekg(this->ssd.run_offset[node->dataIndex + 1],
+                          fstream::beg);
 
-        if (this->runDevice.run_offset[node->dataIndex + 1] >= file_size) {
-            remove(runPath.c_str());
+            runfile.get(runs, numRecords * ON_DISK_RECORD_SIZE + 1);
+            runfile.close();
+            this->ssd.run_offset[node->dataIndex + 1] += strlen(runs);
+            if (this->ssd.run_offset[node->dataIndex + 1] >= file_size) {
+                remove(runPath.c_str());
+            }
+        } else {
+            if (this->hdd.run_offset[node->dataIndex + 1] >= file_size)
+                return NULL;
+
+            runfile.seekg(this->hdd.run_offset[node->dataIndex + 1],
+                          fstream::beg);
+
+            runfile.get(runs, numRecords * ON_DISK_RECORD_SIZE + 1);
+            runfile.close();
+            this->hdd.run_offset[node->dataIndex + 1] += strlen(runs);
+            if (this->hdd.run_offset[node->dataIndex + 1] >= file_size) {
+                remove(runPath.c_str());
+            }
         }
 
         string s(runs);
@@ -157,8 +189,7 @@ DataRecord *Tree::getTopRecordFromLeafList(Node *node) {
 }
 
 Tree::Tree(vector<RecordDetails *> &recordDetailsList, int numRecords,
-           bool shouldRemoveDuplicates, StorageDevice &device, bool ramTree) {
-    this->removeDuplicate = shouldRemoveDuplicates;
+           StorageDevice &ssd, StorageDevice &hdd) {
     if (recordDetailsList.size() % 2) {
         RecordDetails *x = new RecordDetails;
         recordDetailsList.push_back(x);
@@ -167,8 +198,8 @@ Tree::Tree(vector<RecordDetails *> &recordDetailsList, int numRecords,
     this->numLeaves = this->numRuns;
     this->numRecords = numRecords;
     this->numInnerNodes = (this->numLeaves % 2 + this->numLeaves / 2) * 2 - 1;
-    this->runDevice = device;
-    this->ramTree = ramTree;
+    this->ssd = ssd;
+    this->hdd = hdd;
     cout << this->numInnerNodes << " INNER NODES" << endl;
 
     this->numNodes = numLeaves + this->numInnerNodes;
@@ -195,8 +226,6 @@ Tree::Tree(vector<RecordDetails *> &recordDetailsList, int numRecords,
 }
 
 Tree::Tree(vector<DataRecord> &records, bool shouldRemoveDuplicates) {
-    this->removeDuplicate = shouldRemoveDuplicates;
-
     this->numRuns = records.size();
     this->numRecords = this->numRuns;
 
@@ -224,29 +253,6 @@ Tree::Tree(vector<DataRecord> &records, bool shouldRemoveDuplicates) {
         heap[i].isEmpty = false;
         heap[i].dataIndex = i;
         heap[i].sortedRunIndex = 0;
-    }
-}
-
-void Tree::generateSortedRun() {
-    for (int i = 0; i < this->numRecords; i++) {
-        for (int inner_node_index = this->numInnerNodes; inner_node_index >= 0;
-             inner_node_index--) {
-            this->run_tournament(inner_node_index);
-        }
-        if (this->removeDuplicate == true) {
-            int n = this->generated_run.size();
-            if (n == 0) {
-                this->generated_run.push_back(this->heap[0].dataRecord);
-            } else if (this->heap[0].dataRecord != NULL &&
-                       !(*this->generated_run[n - 1] ==
-                         *this->heap[0].dataRecord)) {
-                this->generated_run.push_back(this->heap[0].dataRecord);
-            }
-        } else {
-            this->generated_run.push_back(this->heap[0].dataRecord);
-            // if genarated_run.size = 1000, append
-        }
-        this->heap[0].dataRecord = NULL;
     }
 }
 

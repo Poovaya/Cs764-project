@@ -40,6 +40,7 @@ std::string DataRecord::random_string(size_t length) {
 
 void DataRecord::initRandomRecord(int recordSize) {
     std::string rand_string = random_string(recordSize);
+    rand_string += '\n';
     this->data = rand_string;
 }
 

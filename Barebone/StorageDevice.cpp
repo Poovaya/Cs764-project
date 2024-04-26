@@ -51,13 +51,13 @@ void StorageDevice::spillRecordsToDisk(bool ifNewFile,
     for (uint ii = 0; ii < records.size(); ii++) {
         DataRecord *record = records[ii];
 
-        if (record == NULL) {
-            break;
-        } else {
-            str_record = record->getRecord();
-            this->lastValidString = str_record;
-        }
-        str_records += str_record + delim;
+        //  if (record == NULL) {
+        //      break;
+        //   } else {
+        str_record = record->getRecord();
+        this->lastValidString = str_record;
+        //    }
+        str_records += str_record;
         delete record;
     }
     runfile << str_records;

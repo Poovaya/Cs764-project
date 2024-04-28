@@ -10,8 +10,12 @@
 #include "DeviceConstants.h"
 #include "RecordDetails.h"
 #include "Scan.h"
+#include "SortTrace.h"
 #include "Tree.h"
 using namespace std;
+string trace_file = "trace";
+
+SortTrace trace(trace_file);
 
 namespace fs = filesystem;
 
@@ -229,7 +233,7 @@ int main(int argc, char *argv[]) {
 
     StorageDevice ssd = StorageDevice("SSD");
     StorageDevice hdd = StorageDevice("HDD");
-
+    trace = SortTrace(trace_file);
     recordSize = recordSize * sizeof(char);
     ON_DISK_RECORD_SIZE = recordSize + 1;
 
@@ -254,6 +258,8 @@ int main(int argc, char *argv[]) {
         vector<DataRecord *> recList = plan->GetAllRecords();
 
         sort(recList.begin(), recList.end(), DataRecordComparator());
+        string trace_str = "STATE -> SORT_MINI_RUNS: Sort cache-size mini runs";
+        trace.append_trace(trace_str);
         // WE ARE DONE
         string runPath =
             "/home/poovaya/project764/Cs764-project/Barebone/HDD/output";
@@ -267,7 +273,8 @@ int main(int argc, char *argv[]) {
         for (uint ii = 0; ii < recList.size(); ii++) {
             DataRecord *record = recList[ii];
             string str_record = record->getRecord();
-            str_records += str_record + "\n";
+            str_record[str_record.size() - 1] = '\n';
+            str_records += str_record;
         }
         runfile << str_records;
         runfile.close();
@@ -286,7 +293,10 @@ int main(int argc, char *argv[]) {
             vector<DataRecord *> recList = plan->GetAllRecords();
 
             sort(recList.begin(), recList.end(), DataRecordComparator());
+            string trace_str =
+                "STATE -> SORT_MINI_RUNS: Sort cache-size mini runs";
 
+            trace.append_trace(trace_str);
             RecordDetails *recordDetails = new RecordDetails;
             recordDetails->recordLists = recList;
             recordDetails->runPath = "";
@@ -330,7 +340,10 @@ int main(int argc, char *argv[]) {
                 vector<DataRecord *> recList = plan->GetAllRecords();
 
                 sort(recList.begin(), recList.end(), DataRecordComparator());
+                string trace_str =
+                    "STATE -> SORT_MINI_RUNS: Sort cache-size mini runs";
 
+                trace.append_trace(trace_str);
                 RecordDetails *recordDetails = new RecordDetails;
                 recordDetails->recordLists = recList;
                 recordDetails->runPath = "";
@@ -410,7 +423,10 @@ int main(int argc, char *argv[]) {
 
                     sort(recList.begin(), recList.end(),
                          DataRecordComparator());
+                    string trace_str =
+                        "STATE -> SORT_MINI_RUNS: Sort cache-size mini runs";
 
+                    trace.append_trace(trace_str);
                     RecordDetails *recordDetails = new RecordDetails;
                     recordDetails->recordLists = recList;
                     recordDetails->runPath = "";

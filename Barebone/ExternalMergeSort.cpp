@@ -128,9 +128,10 @@ void ssdRuns(vector<RecordDetails *> runsLeftInMemory, StorageDevice &ssd,
         // Only one run in SSD;
         // records = recordDetailsLists[0];
         // hdd.spillRecordsToDisk(false, records);
-        string ssdRunPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
+        std::filesystem::path currentDir = std::filesystem::current_path();
+        string ssdRunPath = currentDir.string() + "/" +
                             ssd.device_path + "/sorted/sorted_run_1";
-        string hddRunPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
+        string hddRunPath = currentDir.string() + "/" +
                             hdd.device_path + "/output";
 
         if (access(ssdRunPath.c_str(), F_OK) == 0) {
@@ -190,9 +191,10 @@ void hddRuns(vector<RecordDetails *> runsLeftInMemoryFinal, StorageDevice &ssd,
         // Only one run in SSD;
         // records = recordDetailsLists[0];
         // hdd.spillRecordsToDisk(false, records);
-        string ssdRunPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
+        std::filesystem::path currentDir = std::filesystem::current_path();
+        string ssdRunPath = currentDir.string() + "/" +
                             hdd.device_path + "/sorted/sorted_run_1";
-        string hddRunPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
+        string hddRunPath = currentDir.string() + "/" +
                             hdd.device_path + "/output";
 
         if (access(ssdRunPath.c_str(), F_OK) == 0) {
@@ -261,8 +263,10 @@ int main(int argc, char *argv[]) {
         string trace_str = "STATE -> SORT_MINI_RUNS: Sort cache-size mini runs";
         trace.append_trace(trace_str);
         // WE ARE DONE
+        std::filesystem::path currentDir = std::filesystem::current_path();
+
         string runPath =
-            "/home/poovaya/project764/Cs764-project/Barebone/HDD/output";
+            currentDir.string() + "/HDD/output";
 
         fstream runfile;
         string str_records = "";

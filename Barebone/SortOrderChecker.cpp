@@ -24,8 +24,9 @@ int main(int argc, char* argv[]) {
 
     int record_size = std::atoi(argv[1]);
     int onDiskSize = record_size + 1;
+    std::filesystem::path currentDir = std::filesystem::current_path();
     std::ifstream file(
-        "/home/poovaya/project764/Cs764-project/Barebone/HDD/output",
+        currentDir.string() + "/HDD/output",
         std::ios::binary);  // Open file in binary mode
 
     if (!file.is_open()) {
@@ -66,8 +67,6 @@ int main(int argc, char* argv[]) {
                 return 0;
             }
             currRec = nextRec;
-
-            //
         }
     }
 

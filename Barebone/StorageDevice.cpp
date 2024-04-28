@@ -30,8 +30,10 @@ void StorageDevice::spillRecordsToDisk(bool ifNewFile,
                                        vector<DataRecord *> &records,
                                        int specificFile) {
     string delim = "|";
+    std::filesystem::path currentDir = std::filesystem::current_path();
+
     string runPath =
-        "/home/poovaya/project764/Cs764-project/Barebone/" + this->device_path;
+        currentDir.string() + "/" + this->device_path;
     if (specificFile >= 1) {
         runPath += "/sorted/sorted_run_" + to_string(specificFile);
     } else if (ifNewFile) {
@@ -99,7 +101,9 @@ vector<RecordDetails *> StorageDevice::getRecordsFromRunsOnDisk(
         vector<DataRecord *> records;
         RecordDetails *recordDetails = new RecordDetails;
         fstream runfile;
-        string runPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
+        std::filesystem::path currentDir = std::filesystem::current_path();
+
+        string runPath = currentDir.string()  + "/" +
                          this->device_path + "/sorted/sorted_run_" +
                          to_string(ii);
         recordDetails->runPath = runPath;
@@ -152,8 +156,9 @@ int StorageDevice::getTotalRuns() {
     struct dirent **namelist;
     uint count = 0;
 
+    std::filesystem::path currentDir = std::filesystem::current_path();
     const std::string directory_path =
-        "/home/poovaya/project764/Cs764-project/Barebone/" + this->device_path +
+        currentDir.string() + "/" + this->device_path +
         "/sorted";  // Replace this with your directory path
     int file_count = 0;
 
@@ -168,9 +173,11 @@ int StorageDevice::getTotalRuns() {
 
 void StorageDevice::commitRun() {
     int latestRun = this->getTotalRuns();
-    string mergedRunPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
+    std::filesystem::path currentDir = std::filesystem::current_path();
+
+    string mergedRunPath = currentDir.string() + "/" +
                            this->device_path + "/output";
-    string newRunPath = "/home/poovaya/project764/Cs764-project/Barebone/" +
+    string newRunPath = currentDir.string() + "/" +
                         this->device_path + "/sorted/sorted_run_" +
                         to_string(last_run + 1);
 

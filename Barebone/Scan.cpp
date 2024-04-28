@@ -14,8 +14,9 @@ ScanPlan::ScanPlan(RowCount const count, int recordSize) : _count(count) {
         this->_rows[i].initRandomRecord(recordSize);
     }
 
+    std::filesystem::path currentDir = std::filesystem::current_path();
     std::string runPath =
-        "/home/poovaya/project764/Cs764-project/Barebone/HDD/input";
+        currentDir.string() + "/HDD/input";
 
     std::string str_records = "";
     std::fstream runfile;

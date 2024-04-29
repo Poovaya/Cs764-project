@@ -36,6 +36,9 @@ void dramRuns(vector<RecordDetails *> &runsInMemory, StorageDevice &device,
               bool isFinal, int fileIndex) {
     int cacheSize = 1024 * 1024;
     int n = 0;
+    long long int time_spent_us;
+	clock_t begin_time;
+    
     for (auto x : runsInMemory) {
         n += x->recordLists.size();
     }
@@ -57,7 +60,7 @@ void dramRuns(vector<RecordDetails *> &runsInMemory, StorageDevice &device,
                 device.pageSize) {
                 vector<DataRecord *> records = tree.generated_run;
                 tree.generated_run.clear();
-
+                
                 begin_time = clock();
                 device.spillRecordsToDisk(!isFinal, records, fileIndex);
                 time_spent_us = float(clock() - begin_time) * 1000 * 1000 / CLOCKS_PER_SEC;

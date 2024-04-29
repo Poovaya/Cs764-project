@@ -4,6 +4,7 @@
 
 #include <filesystem>
 
+#include "DeviceConstants.h"
 #include "SortTrace.h"
 extern int recordSize;
 extern int ON_DISK_RECORD_SIZE;
@@ -21,11 +22,10 @@ StorageDevice::StorageDevice(string device_path) {
     this->device_path = device_path;
     this->last_run = 0;
     this->run_offset = map<long long int, long long int>();
-    this->ssdSize = 1e11;
     if (device_path == "SSD") {
-        this->pageSize = 20972;
+        this->pageSize = SSD_PAGE_SIZE;
     } else {
-        this->pageSize = 524288;
+        this->pageSize = HDD_PAGE_SIZE;
     }
     this->lastValidString = "";
 }

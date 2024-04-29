@@ -56,7 +56,6 @@ struct DataRecordComparator {
         // Return true if first should go before second
         DataRecord a = *first;
         DataRecord b = *second;
-        // return first.data[0][0] < second.data[0][0];  // return true;
         return DataRecord::compareDataRecords(a, b);
     }
 };

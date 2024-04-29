@@ -1,4 +1,5 @@
 #include "DataRecord.h"
+#include "DeviceConstants.h"
 #include "RecordDetails.h"
 #include "StorageDevice.h"
 #include "defs.h"
@@ -47,9 +48,9 @@ struct Node {
     bool isEmpty;
     int getDevicePageSize() {
         if (deviceType == Type::SSD) {
-            return 20972;
+            return SSD_PAGE_SIZE;
         } else {
-            return 524288;
+            return HDD_PAGE_SIZE;
         }
     };
 };

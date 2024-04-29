@@ -34,7 +34,7 @@ struct DataRecordComparator {
 
 void dramRuns(vector<RecordDetails *> &runsInMemory, StorageDevice &device,
               bool isFinal, int fileIndex) {
-    int cacheSize = 1024 * 1024;
+    int cacheSize = CACHE_SIZE;
     int n = 0;
     long long int time_spent_us;
     clock_t begin_time;
@@ -122,14 +122,8 @@ void dramRuns(vector<RecordDetails *> &runsInMemory, StorageDevice &device,
 void ssdRuns(vector<RecordDetails *> runsLeftInMemory, StorageDevice &ssd,
              StorageDevice &hdd, bool isFinal, int hddRunIndex,
              long long int recordsToPutInTree) {
-    uint ssd_bandwidth = 200 * 1024 * 1024;
-    double ssd_latency = 0.0001;
-    // int ssd_page_num_records =
-    //     525;  //(ssd_bandwidth * ssd_latency) / (3 + 1 + 4 * 4);
-
     int ssd_page_num_records = ssd.pageSize / ON_DISK_RECORD_SIZE;
 
-    //  while (ssd.getTotalRuns()) {
     int num_records = 0;
     vector<RecordDetails *> recordDetailsLists;
 
@@ -160,7 +154,6 @@ void ssdRuns(vector<RecordDetails *> runsLeftInMemory, StorageDevice &ssd,
                 tree.run_tournament(inner_node_index);
             }
 
-            // tree.generated_run.push_back(tree.heap[0].dataRecord);
             tree.pushRecordToGeneratedRun(tree.heap[0].dataRecord);
 
             tree.heap[0].dataRecord = NULL;
@@ -203,8 +196,6 @@ void ssdRuns(vector<RecordDetails *> runsLeftInMemory, StorageDevice &ssd,
         tree.generated_run.clear();
     } else if (recordDetailsLists.size() == 1) {
         // Only one run in SSD;
-        // records = recordDetailsLists[0];
-        // hdd.spillRecordsToDisk(false, records);
         std::filesystem::path currentDir = std::filesystem::current_path();
         string ssdRunPath = currentDir.string() + "/" + ssd.device_path +
                             "/sorted/sorted_run_1";
@@ -221,8 +212,6 @@ void ssdRuns(vector<RecordDetails *> runsLeftInMemory, StorageDevice &ssd,
 
 void hddRuns(vector<RecordDetails *> runsLeftInMemoryFinal, StorageDevice &ssd,
              StorageDevice &hdd) {
-    uint hdd_bandwidth = 100 * 1024 * 1024;
-    double hdd_latency = 5 * 1e-3;
     uint hdd_page_num_records = hdd.pageSize / ON_DISK_RECORD_SIZE;
     int ssd_page_num_records = ssd.pageSize / ON_DISK_RECORD_SIZE;
 
@@ -319,7 +308,7 @@ int main(int argc, char *argv[]) {
     std::string hdd_dir = "HDD";
     std::string ssd_dir = "SSD";
     std::string sorted_dir = "sorted";
-    
+
     // Remove trace.txt file from HDD/sorted
     if (fs::exists("trace.txt")) {
         fs::remove("trace.txt");
@@ -380,9 +369,6 @@ int main(int argc, char *argv[]) {
     }
 
     // Process non-option arguments here
-    cout << numRecords << " " << recordSize << " " << trace_file << endl;
-
-    // cout << fs::current_path() << endl;
 
     StorageDevice ssd = StorageDevice("SSD");
     StorageDevice hdd = StorageDevice("HDD");
@@ -390,14 +376,14 @@ int main(int argc, char *argv[]) {
     recordSize = recordSize * sizeof(char);
     ON_DISK_RECORD_SIZE = recordSize + 1;
 
-    int dramSize = 100 * 1024 * 1024;
-    long long int ssdSize = 10LL * 1024LL * 1024LL * 1024LL;
+    int dramSize = DRAM_SIZE;
+    long long int ssdSize = SSD_SIZE;
     long long int totalDataSize = ON_DISK_RECORD_SIZE * numRecords;
 
     // int availableDramSize = dramSize * 0.9;
     long long int numRecsThatCanFitInRam = dramSize / ON_DISK_RECORD_SIZE + 1;
     long long int numRecsThatCanFitInSSD = ssdSize / ON_DISK_RECORD_SIZE;
-    int cacheSize = 1024 * 1024;
+    int cacheSize = CACHE_SIZE;
     long long int initialNumRecords = numRecords;
     long long int recordsGeneratedSoFar = 0;
 
@@ -623,12 +609,12 @@ int main(int argc, char *argv[]) {
         hddRuns(runsLeftInMemoryFinal, ssd, hdd);
     }
 
-    cout << "Total latency while making accesses: " + to_string(totalLatency);
-    cout << "Stats for SSD Device:" << endl;
-    ssd.get_device_access_stats();
-    cout << endl;
-    cout << "Stats for HDD Device:" << endl;
-    hdd.get_device_access_stats();
+    // cout << "Total latency while making accesses: " +
+    // to_string(totalLatency); cout << "Stats for SSD Device:" << endl;
+    // ssd.get_device_access_stats();
+    // cout << endl;
+    // cout << "Stats for HDD Device:" << endl;
+    // hdd.get_device_access_stats();
 
     return 0;
 }

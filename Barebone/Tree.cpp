@@ -130,7 +130,6 @@ DataRecord *Tree::getTopRecordFromLeafList(Node *node) {
     if (numRecsInNode == 0) {
         return NULL;
     }
-    //  cout << node->sortedRunIndex << endl;
     if (node->sortedRunIndex >= numRecsInNode &&
         node->deviceType != Type::DRAM) {
         for (auto rec : node->sortedRun) {
@@ -242,8 +241,6 @@ Tree::Tree(vector<RecordDetails *> &recordDetailsList, int numRecords,
     this->numInnerNodes = (this->numLeaves % 2 + this->numLeaves / 2) * 2 - 1;
     this->ssd = ssd;
     this->hdd = hdd;
-    cout << this->numInnerNodes << " INNER NODES" << endl;
-
     this->numNodes = numLeaves + this->numInnerNodes;
     this->heap = new struct Node[this->numNodes];
 

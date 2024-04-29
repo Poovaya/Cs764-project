@@ -1,15 +1,17 @@
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
 
+using namespace std;
 #include "DataRecord.h"
 
-std::vector<std::string> splitString(char* input) {
-    std::istringstream iss(input);
-    std::vector<std::string> result;
-    std::string token;
+vector<std::string> splitString(char* input) {
+    istringstream iss(input);
+    vector<std::string> result;
+    string token;
     while (iss >> token) {
         result.push_back(token);
     }
@@ -24,10 +26,9 @@ int main(int argc, char* argv[]) {
 
     int record_size = std::atoi(argv[1]);
     int onDiskSize = record_size + 1;
-    std::filesystem::path currentDir = std::filesystem::current_path();
-    std::ifstream file(
-        currentDir.string() + "/HDD/output",
-        std::ios::binary);  // Open file in binary mode
+    filesystem::path currentDir = std::filesystem::current_path();
+    std::ifstream file(currentDir.string() + "/HDD/output",
+                       std::ios::binary);  // Open file in binary mode
 
     if (!file.is_open()) {
         std::cerr << "Error opening file!" << std::endl;

@@ -3,7 +3,10 @@
 #include <iostream>
 #include <vector>
 
+#include "SortTrace.h"
 #include "StorageDevice.h"
+extern SortTrace trace;
+
 extern int recordSize;
 extern int ON_DISK_RECORD_SIZE;
 using namespace std;
@@ -30,6 +33,7 @@ DataRecord *Tree::popRecordFromLeafList(Node *node) {
         int numRecords = pageSize / ON_DISK_RECORD_SIZE + 1;
 
         char *runs = new char[numRecords * ON_DISK_RECORD_SIZE + 1];
+        clock_t begin_time = clock();
 
         runfile.open(runPath, fstream::in);
         if (!runfile.is_open()) return NULL;
@@ -46,7 +50,16 @@ DataRecord *Tree::popRecordFromLeafList(Node *node) {
                           fstream::beg);
 
             runfile.get(runs, numRecords * ON_DISK_RECORD_SIZE + 1);
+            string s(runs);
             runfile.close();
+            long long int time_spent_us =
+                float(clock() - begin_time) * 1000 * 1000 / CLOCKS_PER_SEC;
+            string trace_str = "ACCESS -> A read from ./" +
+                               this->ssd.device_path + " was made with size " +
+                               to_string(s.size()) + " bytes and latency " +
+                               to_string(time_spent_us) + " us";
+
+            trace.append_trace(trace_str);
             this->ssd.run_offset[node->dataIndex + 1] += strlen(runs);
             if (this->ssd.run_offset[node->dataIndex + 1] >= file_size) {
                 remove(runPath.c_str());
@@ -59,7 +72,16 @@ DataRecord *Tree::popRecordFromLeafList(Node *node) {
                           fstream::beg);
 
             runfile.get(runs, numRecords * ON_DISK_RECORD_SIZE + 1);
+            string s(runs);
             runfile.close();
+            long long int time_spent_us =
+                float(clock() - begin_time) * 1000 * 1000 / CLOCKS_PER_SEC;
+            string trace_str = "ACCESS -> A read from ./" +
+                               this->hdd.device_path + " was made with size " +
+                               to_string(s.size()) + " bytes and latency " +
+                               to_string(time_spent_us) + " us";
+
+            trace.append_trace(trace_str);
             this->hdd.run_offset[node->dataIndex + 1] += strlen(runs);
             if (this->hdd.run_offset[node->dataIndex + 1] >= file_size) {
                 remove(runPath.c_str());
@@ -127,6 +149,7 @@ DataRecord *Tree::getTopRecordFromLeafList(Node *node) {
         if (!runfile.is_open()) return NULL;
 
         streampos fileSize = runfile.tellg();
+        clock_t begin_time = clock();
 
         // Get the file size
         runfile.seekg(0, std::ios::end);
@@ -142,6 +165,15 @@ DataRecord *Tree::getTopRecordFromLeafList(Node *node) {
 
             runfile.get(runs, numRecords * ON_DISK_RECORD_SIZE + 1);
             runfile.close();
+            string s(runs);
+            long long int time_spent_us =
+                float(clock() - begin_time) * 1000 * 1000 / CLOCKS_PER_SEC;
+            string trace_str = "ACCESS -> A read from ./" +
+                               this->ssd.device_path + " was made with size " +
+                               to_string(s.size()) + " bytes and latency " +
+                               to_string(time_spent_us) + " us";
+
+            trace.append_trace(trace_str);
             this->ssd.run_offset[node->dataIndex + 1] += strlen(runs);
             if (this->ssd.run_offset[node->dataIndex + 1] >= file_size) {
                 remove(runPath.c_str());
@@ -155,6 +187,15 @@ DataRecord *Tree::getTopRecordFromLeafList(Node *node) {
 
             runfile.get(runs, numRecords * ON_DISK_RECORD_SIZE + 1);
             runfile.close();
+            string s(runs);
+            long long int time_spent_us =
+                float(clock() - begin_time) * 1000 * 1000 / CLOCKS_PER_SEC;
+            string trace_str = "ACCESS -> A read from ./" +
+                               this->hdd.device_path + " was made with size " +
+                               to_string(s.size()) + " bytes and latency " +
+                               to_string(time_spent_us) + " us";
+
+            trace.append_trace(trace_str);
             this->hdd.run_offset[node->dataIndex + 1] += strlen(runs);
             if (this->hdd.run_offset[node->dataIndex + 1] >= file_size) {
                 remove(runPath.c_str());

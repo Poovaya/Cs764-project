@@ -3,15 +3,17 @@
 #include <unistd.h>
 
 #include <filesystem>
+
+#include "SortTrace.h"
 extern int recordSize;
 extern int ON_DISK_RECORD_SIZE;
+extern SortTrace trace;
 StorageDevice::StorageDevice() {
     this->device_path = "";
     this->last_run = 0;
     this->run_offset = map<long long int, long long int>();
-    this->ssdSize = 1e11;
     this->total_reads = 0;
-	this->total_writes = 0;
+    this->total_writes = 0;
     this->lastValidString = "";
 }
 
@@ -34,8 +36,7 @@ void StorageDevice::spillRecordsToDisk(bool ifNewFile,
     string delim = "|";
     std::filesystem::path currentDir = std::filesystem::current_path();
 
-    string runPath =
-        currentDir.string() + "/" + this->device_path;
+    string runPath = currentDir.string() + "/" + this->device_path;
     if (specificFile >= 1) {
         runPath += "/sorted/sorted_run_" + to_string(specificFile);
     } else if (ifNewFile) {
@@ -107,9 +108,8 @@ vector<RecordDetails *> StorageDevice::getRecordsFromRunsOnDisk(
         fstream runfile;
         std::filesystem::path currentDir = std::filesystem::current_path();
 
-        string runPath = currentDir.string()  + "/" +
-                         this->device_path + "/sorted/sorted_run_" +
-                         to_string(ii);
+        string runPath = currentDir.string() + "/" + this->device_path +
+                         "/sorted/sorted_run_" + to_string(ii);
         recordDetails->runPath = runPath;
 
         if (this->device_path == "SSD") {
@@ -119,6 +119,7 @@ vector<RecordDetails *> StorageDevice::getRecordsFromRunsOnDisk(
         }
 
         char *runs = new char[numRecords * ON_DISK_RECORD_SIZE + 1];
+        clock_t begin_time = clock();
 
         runfile.open(runPath, fstream::in);
         if (!runfile.is_open()) return recordDetailsLists;
@@ -129,6 +130,9 @@ vector<RecordDetails *> StorageDevice::getRecordsFromRunsOnDisk(
 
         runfile.get(runs, numRecords * ON_DISK_RECORD_SIZE + 1);
         runfile.close();
+        long long int time_spent_us =
+            float(clock() - begin_time) * 1000 * 1000 / CLOCKS_PER_SEC;
+
         this->run_offset[ii] += strlen(runs);
 
         // if (strlen(runs) != (numRecords * ON_DISK_RECORD_SIZE)) {
@@ -136,7 +140,12 @@ vector<RecordDetails *> StorageDevice::getRecordsFromRunsOnDisk(
         // }
 
         string s(runs);
+        string trace_str = "ACCESS -> A read from ./" + this->device_path +
+                           " was made with size " + to_string(s.size()) +
+                           " bytes and latency " + to_string(time_spent_us) +
+                           " us";
 
+        trace.append_trace(trace_str);
         int start = 0;
         while (start < strlen(runs)) {
             string record_str;
@@ -181,11 +190,10 @@ void StorageDevice::commitRun() {
     int latestRun = this->getTotalRuns();
     std::filesystem::path currentDir = std::filesystem::current_path();
 
-    string mergedRunPath = currentDir.string() + "/" +
-                           this->device_path + "/output";
-    string newRunPath = currentDir.string() + "/" +
-                        this->device_path + "/sorted/sorted_run_" +
-                        to_string(last_run + 1);
+    string mergedRunPath =
+        currentDir.string() + "/" + this->device_path + "/output";
+    string newRunPath = currentDir.string() + "/" + this->device_path +
+                        "/sorted/sorted_run_" + to_string(last_run + 1);
 
     if (access(mergedRunPath.c_str(), F_OK) == 0) {
         rename(mergedRunPath.c_str(), newRunPath.c_str());
@@ -194,10 +202,9 @@ void StorageDevice::commitRun() {
     return;
 }
 
-void StorageDevice::get_device_access_stats()
-{
-	cout << "Number of reads on the device: " << this->total_reads << endl;
-	cout << "Number of writes on the device: " << this->total_writes << endl;
+void StorageDevice::get_device_access_stats() {
+    cout << "Number of reads on the device: " << this->total_reads << endl;
+    cout << "Number of writes on the device: " << this->total_writes << endl;
 }
 
 StorageDevice::StorageDevice(const StorageDevice &other) {

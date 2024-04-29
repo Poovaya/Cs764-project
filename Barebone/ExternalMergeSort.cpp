@@ -57,23 +57,37 @@ void dramRuns(vector<RecordDetails *> &runsInMemory, StorageDevice &device,
                 device.pageSize) {
                 vector<DataRecord *> records = tree.generated_run;
                 tree.generated_run.clear();
+
+                begin_time = clock();
                 device.spillRecordsToDisk(!isFinal, records, fileIndex);
+                time_spent_us = float(clock() - begin_time) * 1000 * 1000 / CLOCKS_PER_SEC;
+                totalLatency += time_spent_us;
                 records.clear();
             }
         }
         vector<DataRecord *> records = tree.generated_run;
         tree.generated_run.clear();
+
+        begin_time = clock();
         device.spillRecordsToDisk(!isFinal, records, fileIndex);
+        time_spent_us = float(clock() - begin_time) * 1000 * 1000 / CLOCKS_PER_SEC;
+        totalLatency += time_spent_us;
     } else if (runsInMemory.size() == 1) {
         vector<DataRecord *> records;
         for (auto rec : runsInMemory[0]->recordLists) {
             records.push_back(rec);
             if (records.size() * ON_DISK_RECORD_SIZE >= device.pageSize) {
+                begin_time = clock();
                 device.spillRecordsToDisk(!isFinal, records, fileIndex);
+                time_spent_us = float(clock() - begin_time) * 1000 * 1000 / CLOCKS_PER_SEC;
+                totalLatency += time_spent_us;
                 records.clear();
             }
         }
+        begin_time = clock();
         device.spillRecordsToDisk(!isFinal, records, fileIndex);
+        time_spent_us = float(clock() - begin_time) * 1000 * 1000 / CLOCKS_PER_SEC;
+        totalLatency += time_spent_us;
     }
 }
 
@@ -122,14 +136,20 @@ void ssdRuns(vector<RecordDetails *> runsLeftInMemory, StorageDevice &ssd,
                 hdd.pageSize) {
                 vector<DataRecord *> records = tree.generated_run;
 
+                begin_time = clock();
                 hdd.spillRecordsToDisk(!isFinal, records, hddRunIndex);
+                time_spent_us = float(clock() - begin_time) * 1000 * 1000 / CLOCKS_PER_SEC;
+                totalLatency += time_spent_us;
                 tree.generated_run.clear();
                 records.clear();
             }
         }
 
         vector<DataRecord *> records = tree.generated_run;
+        begin_time = clock();
         hdd.spillRecordsToDisk(!isFinal, records, hddRunIndex);
+        time_spent_us = float(clock() - begin_time) * 1000 * 1000 / CLOCKS_PER_SEC;
+        totalLatency += time_spent_us;
         tree.generated_run.clear();
     } else if (recordDetailsLists.size() == 1) {
         // Only one run in SSD;
@@ -197,14 +217,19 @@ void hddRuns(vector<RecordDetails *> runsLeftInMemoryFinal, StorageDevice &ssd,
             if (tree.generated_run.size() * recordSize >= hdd.pageSize) {
                 vector<DataRecord *> records = tree.generated_run;
                 tree.generated_run.clear();
-
+                begin_time = clock();
                 hdd.spillRecordsToDisk(false, records, -1);
+                time_spent_us = float(clock() - begin_time) * 1000 * 1000 / CLOCKS_PER_SEC;
+                totalLatency += time_spent_us;
             }
         }
 
         vector<DataRecord *> records = tree.generated_run;
         tree.generated_run.clear();
+        begin_time = clock();
         hdd.spillRecordsToDisk(false, records, -1);
+        time_spent_us = float(clock() - begin_time) * 1000 * 1000 / CLOCKS_PER_SEC;
+        totalLatency += time_spent_us;
     } else if (recordDetailsLists.size() == 1) {
         // Only one run in SSD;
         // records = recordDetailsLists[0];

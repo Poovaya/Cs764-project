@@ -316,6 +316,47 @@ void hddRuns(vector<RecordDetails *> runsLeftInMemoryFinal, StorageDevice &ssd,
 }
 
 int main(int argc, char *argv[]) {
+    std::string hdd_dir = "HDD";
+    std::string ssd_dir = "SSD";
+    std::string sorted_dir = "sorted";
+    
+    // Remove trace.txt file from HDD/sorted
+    if (fs::exists("trace.txt")) {
+        fs::remove("trace.txt");
+    }
+
+    // Remove sorted directory from HDD
+    if (fs::exists(hdd_dir)) {
+        fs::remove_all(hdd_dir);
+    }
+
+    // Remove sorted directory from SSD
+    if (fs::exists(ssd_dir)) {
+        fs::remove_all(ssd_dir);
+    }
+
+    // Create HDD directory
+    if (!fs::exists(hdd_dir)) {
+        fs::create_directory(hdd_dir);
+    }
+
+    // Create SSD directory
+    if (!fs::exists(ssd_dir)) {
+        fs::create_directory(ssd_dir);
+    }
+
+    // Create sorted directory inside HDD
+    std::string hdd_sorted_dir = hdd_dir + "/" + sorted_dir;
+    if (!fs::exists(hdd_sorted_dir)) {
+        fs::create_directory(hdd_sorted_dir);
+    }
+
+    // Create sorted directory inside SSD
+    std::string ssd_sorted_dir = ssd_dir + "/" + sorted_dir;
+    if (!fs::exists(ssd_sorted_dir)) {
+        fs::create_directory(ssd_sorted_dir);
+    }
+
     int opt;
     string trace_file = "trace";
 

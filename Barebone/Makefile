@@ -11,16 +11,16 @@ SCRS=
 
 # headers and code sources
 HDRS=	defs.h \
-		Iterator.h Scan.h Filter.h Sort.h DataRecord.h StorageDevice.h Tree.h SortTrace.h
+		Iterator.h Scan.h Filter.h Sort.h DataRecord.h StorageDevice.h Tree.h SortTrace.h SortOrderChecker.h
 SRCS=	defs.cpp Assert.cpp Test.cpp \
-		Iterator.cpp Scan.cpp Filter.cpp Sort.cpp DataRecord.cpp StorageDevice.cpp Tree.cpp ExternalMergeSort.cpp SortTrace.cpp
+		Iterator.cpp Scan.cpp Filter.cpp Sort.cpp DataRecord.cpp StorageDevice.cpp Tree.cpp ExternalMergeSort.cpp SortTrace.cpp SortOrderChecker.cpp
 
 # compilation targets
 OBJS=	defs.o Assert.o Test.o \
 		Iterator.o Scan.o Filter.o Sort.o DataRecord.o StorageDevice.o Tree.o 
 
 EXTERNAL_MERGE_SORT_OBJS=	defs.o Assert.o  ExternalMergeSort.o\
-		Iterator.o Scan.o Filter.o Sort.o DataRecord.o Tree.o StorageDevice.o SortTrace.o
+		Iterator.o Scan.o Filter.o Sort.o DataRecord.o Tree.o StorageDevice.o SortTrace.o SortOrderChecker.o
 
 # RCS assists
 REV=-q -f
@@ -33,7 +33,6 @@ Test.exe : Makefile $(OBJS)
 
 ExternalMergeSort.exe : Makefile $(EXTERNAL_MERGE_SORT_OBJS)
 	g++ $(CPPFLAGS) -o ExternalMergeSort.exe $(EXTERNAL_MERGE_SORT_OBJS)
-
 
 
 trace : Test.exe Makefile
@@ -49,6 +48,7 @@ Filter.o : Filter.h
 Sort.o : Sort.h
 DataRecord.o : DataRecord.h
 SortTrace.o : SortTrace.h
+SortOrderChecker.o : SortOrderChecker.h DataRecord.o
 
 list : Makefile
 	echo Makefile $(HDRS) $(SRCS) $(DOCS) $(SCRS) > list
@@ -62,5 +62,5 @@ co :
 	co $(REV) -l $(HDRS) $(SRCS) $(DOCS) $(SCRS)
 
 clean :
-	@rm -f $(OBJS) Test.exe Test.exe.stackdump trace
+	@rm -f $(OBJS) Test.exe Test.exe.stackdump
 	@rm -f $(EXTERNAL_MERGE_SORT_OBJS) ExternalMergeSort.exe

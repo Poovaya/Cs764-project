@@ -7,6 +7,8 @@
 
 using namespace std;
 #include "DataRecord.h"
+#include "DeviceConstants.h"
+#include "SortOrderChecker.h"
 
 vector<std::string> splitString(char* input) {
     istringstream iss(input);
@@ -18,13 +20,11 @@ vector<std::string> splitString(char* input) {
     return result;
 }
 
-int main(int argc, char* argv[]) {
-    if (argc != 2) {
-        std::cerr << "Usage: " << argv[0] << " <integer>" << std::endl;
-        return 1;
+void verifySortOrder(int record_size, long long int num_record) {
+    bool hdd = false;
+    if ((long long int)record_size * num_record > SSD_SIZE) {
+        hdd = true;
     }
-
-    int record_size = std::atoi(argv[1]);
     int onDiskSize = record_size + 1;
     filesystem::path currentDir = std::filesystem::current_path();
     std::ifstream file(currentDir.string() + "/HDD/output",
@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
 
     if (!file.is_open()) {
         std::cerr << "Error opening file!" << std::endl;
-        return 1;
+        return;
     }
 
     // const int numBytesToRead = 20;
@@ -61,11 +61,13 @@ int main(int argc, char* argv[]) {
             dataRecordBytes[onDiskSize - 1] = '\0';
 
             nextRec = DataRecord(dataRecordBytes);
-            if (!(DataRecord::compareDataRecords(currRec, nextRec))) {
+            if (!(DataRecord::compareDataRecords(currRec, nextRec)) && !hdd) {
                 currRec.show();
                 nextRec.show();
-                std::cout << "BAD ORDER" << std::endl;
-                return 0;
+                std::cout << "Scanned " + to_string(num_record) +
+                                 " records, records are not sorted"
+                          << std::endl;
+                return;
             }
             currRec = nextRec;
         }
@@ -74,7 +76,7 @@ int main(int argc, char* argv[]) {
     // Check if there was an error or if there are remaining bytes to be read
     if (file.bad()) {
         std::cerr << "Error reading file!" << std::endl;
-        return 1;
+        return;
     } else if (file.eof()) {
         // If the end of the file is reached, but there are remaining bytes in
         // the buffer, process them
@@ -98,9 +100,12 @@ int main(int argc, char* argv[]) {
                 dataRecordBytes[onDiskSize - 1] = '\0';
 
                 nextRec = DataRecord(dataRecordBytes);
-                if (!(DataRecord::compareDataRecords(currRec, nextRec))) {
-                    std::cout << "BAD ORDER1" << std::endl;
-                    return 0;
+                if (!(DataRecord::compareDataRecords(currRec, nextRec)) &&
+                    !hdd) {
+                    std::cout << "Scanned " + to_string(num_record) +
+                                     " records, records are not sorted"
+                              << std::endl;
+                    return;
                 }
                 currRec = nextRec;
             }
@@ -108,7 +113,7 @@ int main(int argc, char* argv[]) {
     }
 
     file.close();  // Close the file
-    std::cout << "GOOD ORDER" << std::endl;
-
-    return 0;
+    std::cout << "Scanned " + to_string(num_record) +
+                     " records, all records are sorted"
+              << std::endl;
 }

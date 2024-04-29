@@ -10,8 +10,10 @@
 #include "DeviceConstants.h"
 #include "RecordDetails.h"
 #include "Scan.h"
+#include "SortOrderChecker.h"
 #include "SortTrace.h"
 #include "Tree.h"
+
 using namespace std;
 string trace_file = "trace";
 
@@ -310,8 +312,8 @@ int main(int argc, char *argv[]) {
     std::string sorted_dir = "sorted";
 
     // Remove trace.txt file from HDD/sorted
-    if (fs::exists("trace.txt")) {
-        fs::remove("trace.txt");
+    if (fs::exists("trace")) {
+        fs::remove("trace");
     }
 
     // Remove sorted directory from HDD
@@ -390,6 +392,10 @@ int main(int argc, char *argv[]) {
     long long int cacheMiniRunSize = cacheSize / ON_DISK_RECORD_SIZE + 1;
 
     // < 1MB
+    bool isHdd = false;
+    if (totalDataSize > ssdSize) {
+        isHdd = true;
+    }
     if (totalDataSize <= cacheSize) {
         ScanPlan *const plan = new ScanPlan(numRecords, recordSize);
         vector<DataRecord *> recList = plan->GetAllRecords();
@@ -615,6 +621,7 @@ int main(int argc, char *argv[]) {
     // cout << endl;
     // cout << "Stats for HDD Device:" << endl;
     // hdd.get_device_access_stats();
-
+    cout << "Sorting complete, verifying sort order" << endl;
+    verifySortOrder(recordSize, numRecords);
     return 0;
 }

@@ -10,6 +10,8 @@ StorageDevice::StorageDevice() {
     this->last_run = 0;
     this->run_offset = map<long long int, long long int>();
     this->ssdSize = 1e11;
+    this->total_reads = 0;
+	this->total_writes = 0;
     this->lastValidString = "";
 }
 
@@ -81,6 +83,8 @@ void StorageDevice::spillRecordsToDisk(bool ifNewFile,
     }
     runfile << str_records;
 
+    this->total_writes += 1;
+
     runfile.close();
 
     return;
@@ -120,6 +124,8 @@ vector<RecordDetails *> StorageDevice::getRecordsFromRunsOnDisk(
         if (!runfile.is_open()) return recordDetailsLists;
 
         runfile.seekg(this->run_offset[ii], fstream::beg);
+
+        this->total_reads += 1;
 
         runfile.get(runs, numRecords * ON_DISK_RECORD_SIZE + 1);
         runfile.close();
@@ -186,6 +192,12 @@ void StorageDevice::commitRun() {
     }
 
     return;
+}
+
+void StorageDevice::get_device_access_stats()
+{
+	cout << "Number of reads on the device: " << this->total_reads << endl;
+	cout << "Number of writes on the device: " << this->total_writes << endl;
 }
 
 StorageDevice::StorageDevice(const StorageDevice &other) {

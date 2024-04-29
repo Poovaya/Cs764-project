@@ -22,6 +22,7 @@ namespace fs = filesystem;
 extern int recordSize = 0;
 extern long long int numRecords = 0;
 extern int ON_DISK_RECORD_SIZE = 0;
+extern long long int totalLatency = 0;
 struct DataRecordComparator {
     bool operator()(DataRecord *first, DataRecord *second) const {
         // Return true if first should go before second
@@ -90,7 +91,13 @@ void ssdRuns(vector<RecordDetails *> runsLeftInMemory, StorageDevice &ssd,
     int num_records = 0;
     vector<RecordDetails *> recordDetailsLists;
 
+    long long int time_spent_us;
+	clock_t begin_time;
+    begin_time = clock();
     recordDetailsLists = ssd.getRecordsFromRunsOnDisk(ssd_page_num_records);
+    time_spent_us = float(clock() - begin_time) * 1000 * 1000 / CLOCKS_PER_SEC;
+    totalLatency += time_spent_us;
+
     recordDetailsLists.insert(recordDetailsLists.end(),
                               runsLeftInMemory.begin(), runsLeftInMemory.end());
 
@@ -151,8 +158,19 @@ void hddRuns(vector<RecordDetails *> runsLeftInMemoryFinal, StorageDevice &ssd,
 
     int num_records = 0;
     vector<RecordDetails *> recordDetailsLists;
+
+    long long int time_spent_us;
+	clock_t begin_time;
+
+    begin_time = clock();
     recordDetailsLists = ssd.getRecordsFromRunsOnDisk(hdd_page_num_records);
+    time_spent_us = float(clock() - begin_time) * 1000 * 1000 / CLOCKS_PER_SEC;
+    totalLatency += time_spent_us;
+
+    begin_time = clock();
     auto recordDetailsHDD = hdd.getRecordsFromRunsOnDisk(ssd_page_num_records);
+    time_spent_us = float(clock() - begin_time) * 1000 * 1000 / CLOCKS_PER_SEC;
+    totalLatency += time_spent_us;
 
     recordDetailsLists.insert(recordDetailsLists.end(),
                               recordDetailsHDD.begin(), recordDetailsHDD.end());
@@ -282,11 +300,7 @@ int main(int argc, char *argv[]) {
         }
         runfile << str_records;
         runfile.close();
-        return 0;
-    }
-
-    // > 1MB < 100MB
-    if (totalDataSize <= dramSize) {
+    } else if (totalDataSize <= dramSize) {
         vector<RecordDetails *> runsInMemory;
         while (initialNumRecords > 0) {
             int recordsToGenerate =
@@ -308,12 +322,7 @@ int main(int argc, char *argv[]) {
             runsInMemory.push_back(recordDetails);
         }
         dramRuns(runsInMemory, hdd, true, -1);
-
-        return 0;
-    }
-
-    // > 100MB  < 10GB
-    if (totalDataSize <= ssdSize) {
+    } else if (totalDataSize <= ssdSize) {
         long long int numSSDRuns = (totalDataSize / dramSize) + 1;
         long long int numSSDIterations = numSSDRuns;
         int ssdRunIndex = 1;
@@ -372,10 +381,7 @@ int main(int argc, char *argv[]) {
             }
         }
         ssdRuns(runsLeftInMemory, ssd, hdd, true, -1, numRecords);
-        return 0;
-    }
-
-    if (totalDataSize > ssdSize) {
+    } else if (totalDataSize > ssdSize) {
         long long int numHDDRuns = (totalDataSize / ssdSize) + 1;
         long long int numHDDIterations = numHDDRuns;
         long long int dataToSpillFirstHDD = totalDataSize % ssdSize;
@@ -464,7 +470,14 @@ int main(int argc, char *argv[]) {
             }
         }
         hddRuns(runsLeftInMemoryFinal, ssd, hdd);
-        return 0;
     }
+
+    cout<<"Total latency while making accesses: " + to_string(totalLatency);
+    cout << "Stats for SSD Device:" << endl;
+    ssd.get_device_access_stats();
+    cout << endl;
+    cout << "Stats for HDD Device:" << endl;
+    hdd.get_device_access_stats();
+
     return 0;
 }

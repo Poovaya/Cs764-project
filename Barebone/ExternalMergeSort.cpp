@@ -312,7 +312,8 @@ int main(int argc, char *argv[]) {
     std::string sorted_dir = "sorted";
 
     // Remove trace.txt file from HDD/sorted
-    if (fs::exists("trace")) {
+    if (fs::exists("trace/trace.txt")) {
+        fs::remove("trace/trace.txt");
         fs::remove("trace");
     }
 
